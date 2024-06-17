@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog, simpledialog, messagebox
-from video_functions import start_video, pause_video, advance_video, goback_video, set_speed
+from video_functions import start_video, pause_video, advance_video, goback_video
 
 
 class VideoPlayer:
@@ -16,6 +16,10 @@ class VideoPlayer:
             master.quit()
             return
         
+        # Label to display video frames
+        self.video_label = tk.Label(master)
+        self.video_label.pack()
+
 
         # Buttons for video control
         self.start_button = tk.Button(master, text="Start", command=self.start_video)
@@ -49,7 +53,9 @@ class VideoPlayer:
 
     def start_video(self):
         try:
-            self.player = start_video(self.video_file, self.player, self.speed, self.playing)
+            if self.player:
+                self.player.close_player()
+            self.player = start_video(self.video_file, self.player, self.speed, self.playing, self.video_label)
         except Exception as e:
             print(f"Error: {e}")
 
@@ -57,6 +63,10 @@ class VideoPlayer:
     def pause_video(self):
         try:
             pause_video(self.player, self.playing)
+            if self.playing[0]:
+                self.pause_button.config(text="Pause")
+            else:
+                self.pause_button.config(text="Return")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -76,8 +86,9 @@ class VideoPlayer:
     
     def set_speed(self):
         speed = simpledialog.askfloat("Input", "Entre speed rate (e.g., 0.5 for half speed, 2 for double speed):")
-        self.speed = speed
-        set_speed(self.player, self.speed)
+        if speed and speed > 0:
+            self.speed = speed
+            self.start_video()
 
 
     def break_video(self):
