@@ -49,10 +49,15 @@ class VideoPlayer:
         self.break_button = tk.Button(master, text="Break", command=self.break_video)
         self.break_button.pack()
 
+        self.close_button = tk.Button(master, text="Close", command=self.on_closing)
+        self.close_button.pack
+
 
         self.player = None
         self.playing = [False]
         self.speed = 1.0
+
+        self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
 
 
     def start_video(self):
@@ -61,7 +66,7 @@ class VideoPlayer:
                 self.player.close_player()
             self.player = start_video(self.video_file, self.player, self.speed, self.playing, self.video_label)
             self.playing[0] = True
-            
+
         except Exception as e:
             print(f"Error: {e}")
 
@@ -99,6 +104,13 @@ class VideoPlayer:
 
     def break_video(self):
         pass
+
+
+    def on_closing(self):
+        if self.player:
+            self.player.close_player()
+            self.playing[0] = False
+            self.master.destroy()
 
 
 if __name__ == "__main__":
