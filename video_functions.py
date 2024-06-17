@@ -1,6 +1,5 @@
 from ffpyplayer.player import MediaPlayer
 import threading
-from PIL import Image
 
 
 def start_video(video_file, player, speed, playing):
