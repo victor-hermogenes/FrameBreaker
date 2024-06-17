@@ -16,6 +16,10 @@ class VideoPlayer:
             master.quit()
             return
         
+        # Create a frame to hold the video display and control buttons
+        self.frame = tk.Frame(master)
+        self.frame.pack
+
         # Label to display video frames
         self.video_label = tk.Label(master)
         self.video_label.pack()
@@ -56,6 +60,7 @@ class VideoPlayer:
             if self.player:
                 self.player.close_player()
             self.player = start_video(self.video_file, self.player, self.speed, self.playing, self.video_label)
+            self.playing[0] = True
         except Exception as e:
             print(f"Error: {e}")
 

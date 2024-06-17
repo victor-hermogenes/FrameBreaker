@@ -1,7 +1,7 @@
 from ffpyplayer.player import MediaPlayer
 import threading
 from PIL import Image, ImageTk
-import tkinter as tk
+import numpy as np
 
 
 def start_video(video_file, player, speed, playing, label):
@@ -19,8 +19,9 @@ def play_video(player, playing, label):
         if frame is None:
             continue
         img, t = frame
-        img = img.to_image()
-        img = Image.frombytes('RGB', img.get_size(), img.to_bytearray()[0])
+        img_bytes = img.to_bytearray()[0]
+        img = np.frombuffer(img_bytes, np.uint8).reshape(img.get_size()[1], img.get_size()[0], 3)
+        img = Image.fromarray(img)
         img = ImageTk.PhotoImage(img)
         label.config(image=img)
         label.image = img
@@ -29,7 +30,7 @@ def play_video(player, playing, label):
 def pause_video(player, playing):
     if player:
         playing[0] = not playing[0]
-        player.set_pause(playing[0])
+        player.set_pause(not player.get_pause())
 
 
 def advance_video(player):
