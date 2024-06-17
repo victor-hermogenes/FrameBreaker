@@ -1,83 +1,91 @@
 import tkinter as tk
 from tkinter import filedialog, simpledialog, messagebox
-from ffpyplayer.player import MediaPlayer
-import threading
+from video_functions import start_video, pause_video, advance_video, goback_video, set_speed
+
 
 class VideoPlayer:
     def __init__(self, master):
         self.master = master
         self.master.title("Video Player")
 
+
         # Prompt to select video file
         self.video_file = filedialog.askopenfilename(title="Select a video file")
         if not self.video_file:
-            messagebox.showerror("Error", "No video file selected. Exiting.")
+            messagebox.showerror("Error", "No video file select. Exiting.")
             master.quit()
             return
+        
 
         # Buttons for video control
         self.start_button = tk.Button(master, text="Start", command=self.start_video)
         self.start_button.pack()
 
+
         self.pause_button = tk.Button(master, text="Pause", command=self.pause_video)
         self.pause_button.pack()
 
-        self.advance_button = tk.Button(master, text="Advance", command=self.advance_video)
+
+        self.advance_button = tk.Button(master , text="Advance", command=self.advance_video)
         self.advance_button.pack()
+
 
         self.goback_button = tk.Button(master, text="Go Back", command=self.goback_video)
         self.goback_button.pack()
 
+
         self.speed_button = tk.Button(master, text="Speed", command=self.set_speed)
         self.speed_button.pack()
+
 
         self.break_button = tk.Button(master, text="Break", command=self.break_video)
         self.break_button.pack()
 
+
         self.player = None
-        self.playing = False
+        self.playing = [False]
         self.speed = 1.0
 
-    def start_video(self):
-        self.playing = True
-        self.player = MediaPlayer(self.video_file, ff_opts={'paused': False})
-        threading.Thread(target=self.play_video).start()
 
-    def play_video(self):
-        while self.playing:
-            frame, val = self.player.get_frame()
-            if val == 'eof':
-                break
-            if frame is None:
-                continue
-            img, t = frame
-            img = img.to_image()
-            img.show()
-    
+    def start_video(self):
+        try:
+            self.player = start_video(self.video_file, self.player, self.speed, self.playing)
+        except Exception as e:
+            print(f"Error: {e}")
+
+
     def pause_video(self):
-        if self.player:
-            self.playing = not self.playing
-            self.player.set_pause(self.playing)
+        try:
+            pause_video(self.player, self.playing)
+        except Exception as e:
+            print(f"Error: {e}")
 
     def advance_video(self):
-        if self.player:
-            self.player.seek(10, relative=True)
+        try:
+            advance_video(self.player)
+        except Exception as e:
+            print(f"Error: {e}")
 
+        
     def goback_video(self):
-        if self.player:
-            self.player.seek(-10, relative=True)
+        try:
+            goback_video(self.player)
+        except Exception as e:
+            print(f"Error: {e}")
 
+    
     def set_speed(self):
-        speed = simpledialog.askfloat("Input", "Enter speed rate (e.g., 0.5 for half speed, 2 for double speed):")
-        if speed and speed > 0:
-            self.speed = speed
-            self.player.set_speed(self.speed)
+        speed = simpledialog.askfloat("Input", "Entre speed rate (e.g., 0.5 for half speed, 2 for double speed):")
+        self.speed = speed
+        set_speed(self.player, self.speed)
+
 
     def break_video(self):
-        # Placeholder for the break video functionality
         pass
+
 
 if __name__ == "__main__":
     root = tk.Tk()
     app = VideoPlayer(root)
     root.mainloop()
+
