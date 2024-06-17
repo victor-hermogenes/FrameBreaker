@@ -50,7 +50,7 @@ class VideoPlayer:
         self.break_button.pack()
 
         self.close_button = tk.Button(master, text="Close", command=self.on_closing)
-        self.close_button.pack
+        self.close_button.pack()
 
 
         self.player = None
