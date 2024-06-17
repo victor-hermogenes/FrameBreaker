@@ -15,6 +15,7 @@ def play_video(player, playing, label):
     while playing[0]:
         frame, val = player.get_frame()
         if val == 'eof':
+            playing[0] = False
             break
         if frame is None:
             continue
@@ -25,12 +26,21 @@ def play_video(player, playing, label):
         img = ImageTk.PhotoImage(img)
         label.config(image=img)
         label.image = img
+        if player.get_pause():
+            while player.get_pause():
+                if not playing[0]:
+                    break
+                continue
 
 
 def pause_video(player, playing):
     if player:
-        playing[0] = not playing[0]
-        player.set_pause(not player.get_pause())
+        if player.get_pause():
+            player.set_pause(False)
+            playing[0] = True
+        else:
+            player.set_pause(True)
+            playing[0] = False
 
 
 def advance_video(player):

@@ -61,6 +61,7 @@ class VideoPlayer:
                 self.player.close_player()
             self.player = start_video(self.video_file, self.player, self.speed, self.playing, self.video_label)
             self.playing[0] = True
+            
         except Exception as e:
             print(f"Error: {e}")
 
