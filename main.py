@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog, simpledialog, messagebox
 from PIL import Image, ImageTk
-from video_functions import start_video
+from video_functions import start_video, pause_video, resume_video
 
 class VideoPlayer:
     def __init__(self, master):
@@ -74,33 +74,42 @@ class VideoPlayer:
 
     def start_video(self):
         try:
+            print("Start video button clicked")
             if self.player:
+                print("Pausing and closing existing player before restarting")
+                self.playing[0] = False
+                if not self.paused[0]:
+                    print("Pausing current video")
+                    pause_video(self.player, self.paused)
                 self.player.close_player()
+                self.player = None
+                print("Existing player closed")
+            
+            print("Calling start_video from video_functions.py")
             self.player = start_video(self.video_file, self.speed, self.playing, self.paused, self.video_label)
-            self.playing[0] = True
-            self.paused[0] = False
-            self.pause_button.config(image=self.pause_icon)
+            if self.player:
+                print("New player started successfully")
+                self.playing[0] = True
+                self.paused[0] = False
+                self.pause_button.config(image=self.pause_icon)
+            else:
+                print("Failed to start new player")
         except Exception as e:
             print(f"Error in start_video (main.py): {e}")
 
 
     def toggle_pause(self):
-        if self.playing[0]:
-            self.pause_video()
-        else:
-            self.resume_video()
-
-
-    def pause_video(self):
-        self.playing[0] = False
-        self.pause_button.config(image=self.resume_icon)
-        print("Pause video")
-
-
-    def resume_video(self):
-        self.playing[0] = True
-        self.pause_button.config(image=self.pause_icon)
-        print("Resume video")
+        try:
+            print("Toggle pause button clicked")
+            if self.paused[0]:
+                resume_video(self.player, self.paused)
+                self.pause_button.config(image=self.pause_icon)
+            else:
+                pause_video(self.player, self.paused)
+                self.pause_button.config(image=self.resume_icon)
+            print("Pause toggle successful")
+        except Exception as e:
+            print(f"Error in toggle_pause (main.py): {e}")
 
 
     def advance_video(self):
