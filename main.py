@@ -99,7 +99,15 @@ class VideoPlayer:
         speed = simpledialog.askfloat("Input", "Entre speed rate (e.g., 0.5 for half speed, 2 for double speed):")
         if speed and speed > 0:
             self.speed = speed
-            set_speed(self.player, self.speed)
+            self.change_speed()
+
+    
+    def change_speed(self):
+        if self.player:
+            current_pos = self.player.get_pts()
+            self.player.close_player()
+            self.player = start_video(self.video_file, self.player, self.speed, self.playing, self.video_label)
+            self.player.seek(current_pos, relative=False)
 
 
     def break_video(self):
@@ -108,8 +116,8 @@ class VideoPlayer:
 
     def on_closing(self):
         if self.player:
+            self.playing[0] = False
             self.player.close_player()
-        self.playing[0] = False
         self.master.destroy()
 
 

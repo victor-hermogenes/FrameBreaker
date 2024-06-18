@@ -13,22 +13,21 @@ def start_video(video_file, player, speed, playing, label):
 
 def play_video(player, playing, label):
     while True:
-        if playing[0]:
-            frame, val = player.get_frame()
-            if val == 'eof':
-                playing[0] = False
-                break
-            if frame is None:
-                continue
-            img, t = frame
-            img_bytes = img.to_bytearray()[0]
-            img = np.frombuffer(img_bytes, np.uint8).reshape(img.get_size()[1], img.get_size()[0], 3)
-            img = Image.fromarray(img)
-            img = ImageTk.PhotoImage(img)
-            label.config(image=img)
-            label.image = img
-        else:
-            player.set_pause(True)
+        if not playing[0]:
+            break
+        frame, val = player.get_frame()
+        if val == 'eof':
+            playing[0] = False
+            break
+        elif frame is None:
+            continue
+        img, t = frame
+        img_bytes = img.to_bytearray()[0]
+        img = np.frombuffer(img_bytes, np.uint8).reshape(img.get_size()[1], img.get_size()[0], 3)
+        img = Image.fromarray(img)
+        img = ImageTk.PhotoImage(img)
+        label.config(image=img)
+        label.image = img
 
 
 def pause_video(player, playing):
@@ -45,7 +44,3 @@ def advance_video(player):
 def goback_video(player):
     if player:
         player.seek(-10, relative=True)
-
-
-def set_speed(player, speed):
-    player.set_option('af', f'atempo={speed}')
