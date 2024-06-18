@@ -45,3 +45,7 @@ def advance_video(player):
 def goback_video(player):
     if player:
         player.seek(-10, relative=True)
+
+
+def set_speed(player, speed):
+    player.set_option('af', f'atempo={speed}')
