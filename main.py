@@ -38,39 +38,44 @@ class VideoPlayer:
         self.close_icon = ImageTk.PhotoImage(Image.open("icons/sair.ico").resize(self.icon_size, Image.Resampling.LANCZOS))
 
 
-        self.start_button = tk.Button(self.control_frame, image=self.start_icon, command=self.start_video)
+        self.start_button = tk.Button(self.control_frame, image=self.start_icon, command=self.start_video, bg='white')
         self.start_button.pack(side=tk.LEFT)
 
-        self.pause_button = tk.Button(self.control_frame, image=self.pause_icon, command=self.toggle_pause)
+        self.pause_button = tk.Button(self.control_frame, image=self.pause_icon, command=self.toggle_pause, bg='white')
         self.pause_button.pack(side=tk.LEFT)
 
 
-        self.advance_button = tk.Button(self.control_frame, image=self.advance_icon, command=self.advance_video)
+        self.goback_button = tk.Button(self.control_frame, image=self.goback_icon, command=self.goback_video, bg='white')
+        self.goback_button.pack(side=tk.LEFT)
+
+
+        self.advance_button = tk.Button(self.control_frame, image=self.advance_icon, command=self.advance_video, bg='white')
         self.advance_button.pack(side=tk.LEFT)
 
 
-        self.goback_button = tk.Button(self.control_frame, image=self.goback_icon, command=self.goback_video)
-        self.goback_button.pack(side=tk.LEFT)
-
-        self.speed_button = tk.Button(self.control_frame, image=self.speed_icon, command=self.set_speed)
+        self.speed_button = tk.Button(self.control_frame, image=self.speed_icon, command=self.set_speed, bg='white')
         self.speed_button.pack(side=tk.LEFT)
 
 
-        self.break_button = tk.Button(self.control_frame, image=self.break_icon, command=self.break_frame)
+        self.break_button = tk.Button(self.control_frame, image=self.break_icon, command=self.break_frame, bg='white')
         self.break_button.pack(side=tk.LEFT)
 
 
-        self.close_button = tk.Button(self.control_frame, image=self.break_icon, command=self.on_closing)
+        self.close_button = tk.Button(self.control_frame, image=self.close_icon, command=self.on_closing, bg='white')
         self.close_button.pack(side=tk.LEFT)
 
 
         self.player = None
         self.playing = [False]
+        self.paused = [False]
         self.speed = 1.0
 
 
     def start_video(self):
         print("Start Video")
+        self.playing[0] = True
+        self.paused[0] = False
+        self.pause_button.config(image=self.pause_icon)
 
 
     def toggle_pause(self):
@@ -82,13 +87,13 @@ class VideoPlayer:
 
     def pause_video(self):
         self.playing[0] = False
-        self.pause_button.config(image=self.pause_icon)
+        self.pause_button.config(image=self.resume_icon)
         print("Pause video")
 
 
     def resume_video(self):
         self.playing[0] = True
-        self.pause_button.config(image=self.resume_icon)
+        self.pause_button.config(image=self.pause_icon)
         print("Resume video")
 
 
