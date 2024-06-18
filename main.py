@@ -1,11 +1,11 @@
 import tkinter as tk
 from tkinter import filedialog, simpledialog, messagebox
-from video_functions import start_video, pause_video, advance_video, goback_video, change_speed
 
 class VideoPlayer:
     def __init__(self, master):
         self.master = master
         self.master.title("Video Player")
+
 
         self.video_file = filedialog.askopenfilename(title="Select a video file")
         if not self.video_file:
@@ -13,80 +13,93 @@ class VideoPlayer:
             master.quit()
             return
         
+        
         self.frame = tk.Frame(master)
         self.frame.pack()
+
 
         self.video_label = tk.Label(master)
         self.video_label.pack()
 
-        self.start_button = tk.Button(master, text="Start", command=self.start_video)
-        self.start_button.pack()
 
-        self.pause_button = tk.Button(master, text="Pause", command=self.pause_video)
-        self.pause_button.pack()
+        self.control_frame = tk.Frame(master)
+        self.control_frame.pack()
 
-        self.advance_button = tk.Button(master, text="Advance", command=self.advance_video)
-        self.advance_button.pack()
 
-        self.goback_button = tk.Button(master, text="Go Back", command=self.goback_video)
-        self.goback_button.pack()
+        self.start_button = tk.Button(self.control_frame, text="Start", command=self.start_video)
+        self.start_button.pack(side=tk.LEFT)
 
-        self.speed_button = tk.Button(master, text="Speed", command=self.set_speed)
-        self.speed_button.pack()
+        self.pause_button = tk.Button(self.control_frame, text="Pause", command=self.toggle_pause)
+        self.pause_button.pack(side=tk.LEFT)
 
-        self.close_button = tk.Button(master, text="Close", command=self.on_closing)
-        self.close_button.pack()
+
+        self.advance_button = tk.Button(self.control_frame, text="Advance", command=self.advance_video)
+        self.advance_button.pack(side=tk.LEFT)
+
+
+        self.goback_button = tk.Button(self.control_frame, text="Go Back", command=self.goback_video)
+        self.goback_button.pack(side=tk.LEFT)
+
+        self.speed_button = tk.Button(self.control_frame, text="Speed Rate", command=self.set_speed)
+        self.speed_button.pack(side=tk.LEFT)
+
+
+        self.break_button = tk.Button(self.control_frame, text="Break frame", command=self.break_frame)
+        self.break_button.pack(side=tk.LEFT)
+
+
+        self.close_button = tk.Button(self.control_frame, text="Close", command=self.on_closing)
+        self.close_button.pack(side=tk.LEFT)
+
 
         self.player = None
         self.playing = [False]
         self.speed = 1.0
 
-        self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def start_video(self):
-        try:
-            if self.player:
-                self.player.close_player()
-            self.player = start_video(self.video_file, self.speed, self.playing, self.video_label)
-            self.playing[0] = True
-        except Exception as e:
-            print(f"Error in start_video: {e}")
+        print("Start Video")
+
+
+    def toggle_pause(self):
+        if self.playing[0]:
+            self.pause_video()
+        else:
+            self.resume_video()
+
 
     def pause_video(self):
-        try:
-            pause_video(self.player, self.playing)
-        except Exception as e:
-            print(f"Error in pause_video: {e}")
+        self.playing[0] = False
+        self.pause_button.config(text="Pause")
+        print("Pause video")
+
+
+    def resume_video(self):
+        self.playing[0] = True
+        self.pause_button.config(text="Resume")
+        print("Resume video")
+
 
     def advance_video(self):
-        try:
-            advance_video(self.player)
-        except Exception as e:
-            print(f"Error in advance_video: {e}")
+        print("Advance 10 sec")
+
 
     def goback_video(self):
-        try:
-            goback_video(self.player)
-        except Exception as e:
-            print(f"Error in goback_video: {e}")
+        print("Go back 10 sec")
+
 
     def set_speed(self):
-        try:
-            speed = simpledialog.askfloat("Input", "Enter speed rate (e.g., 0.5 for half speed, 2 for double speed):")
-            if speed and speed > 0:
-                self.speed = speed
-                change_speed(self.video_file, self.player, self.speed, self.playing, self.video_label)
-        except Exception as e:
-            print(f"Error in set_speed: {e}")
+        print("Set speed")
 
+
+    def break_frame(self):
+        print("Break frame")
+
+    
     def on_closing(self):
-        try:
-            if self.player:
-                self.playing[0] = False
-                self.player.close_player()
-            self.master.destroy()
-        except Exception as e:
-            print(f"Error in on_closing: {e}")
+        print("Close player")
+        self.master.destroy()
+
 
 if __name__ == "__main__":
     root = tk.Tk()
