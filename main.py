@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog, simpledialog, messagebox
 from PIL import Image, ImageTk
+from video_functions import start_video
 
 class VideoPlayer:
     def __init__(self, master):
@@ -72,10 +73,15 @@ class VideoPlayer:
 
 
     def start_video(self):
-        print("Start Video")
-        self.playing[0] = True
-        self.paused[0] = False
-        self.pause_button.config(image=self.pause_icon)
+        try:
+            if self.player:
+                self.player.close_player()
+            self.player = start_video(self.video_file, self.speed, self.playing, self.paused, self.video_label)
+            self.playing[0] = True
+            self.paused[0] = False
+            self.pause_button.config(image=self.pause_icon)
+        except Exception as e:
+            print(f"Error in start_video (main.py): {e}")
 
 
     def toggle_pause(self):
