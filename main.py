@@ -63,10 +63,22 @@ class VideoPlayer(QMainWindow):
             }    
         """)
 
+        self.advanceButton = QPushButton()
+        self.advanceButton.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipForward))
+        self.advanceButton.clicked.connect(self.advance_video)
+        self.advanceButton.setStyleSheet("background-color: white; color: black;")
+
+        self.rewindButton = QPushButton()
+        self.rewindButton.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipBackward))
+        self.rewindButton.clicked.connect(self.rewind_video)
+        self.rewindButton.setStyleSheet("background-color: white; color: black;")
+
         # Layout for the function buttons
         self.controlsLayout = QHBoxLayout()
         self.controlsLayout.addWidget(self.openButton)
+        self.controlsLayout.addWidget(self.rewindButton)
         self.controlsLayout.addWidget(self.startPauseButton)
+        self.controlsLayout.addWidget(self.advanceButton)
         self.controlsLayout.addWidget(self.fullscreenButton)
         self.controlsLayout.addWidget(self.volumeSlider)
 
@@ -150,6 +162,14 @@ class VideoPlayer(QMainWindow):
     
     def change_volume(self, value):
         vf.set_volume(self.mediaPlayer, value)
+
+    
+    def advance_video(self):
+        vf.advance(self.mediaPlayer, 10)
+
+    
+    def rewind_video(self):
+        vf.rewind(self.mediaPlayer, 10)
 
 
 if __name__ == "__main__":

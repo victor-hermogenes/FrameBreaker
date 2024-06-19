@@ -38,3 +38,17 @@ def get_volume(mediaPlayer):
     :return: Current volume level (0 to 100)
     """
     return mediaPlayer.volume()
+
+
+def advance(mediaPlayer, seconds):
+    """Advance the video by a specified number of seconds."""
+    if mediaPlayer.state() == QMediaPlayer.PlayingState or mediaPlayer.state() == QMediaPlayer.PausedState:
+        new_position = mediaPlayer.position() + (seconds * 1000)
+        mediaPlayer.setPosition(new_position)
+
+    
+def rewind(mediaPlayer, seconds):
+    """Rewind the video by a specified number of seconds."""
+    if mediaPlayer.state() == QMediaPlayer.PlayingState or mediaPlayer.state() == QMediaPlayer.PausedState:
+        new_position = mediaPlayer.position() - (seconds * 1000)
+        mediaPlayer.setPosition(new_position)
