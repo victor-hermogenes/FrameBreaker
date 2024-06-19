@@ -1,3 +1,4 @@
+import cv2
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtCore import QUrl
 
@@ -52,3 +53,23 @@ def rewind(mediaPlayer, seconds):
     if mediaPlayer.state() == QMediaPlayer.PlayingState or mediaPlayer.state() == QMediaPlayer.PausedState:
         new_position = mediaPlayer.position() - (seconds * 1000)
         mediaPlayer.setPosition(new_position)
+
+
+def extract_frames(video_path, output_folder):
+    """Extract frames from a video and save them as images in the output folder"""
+    cap = cv2.VideoCapture(video_path)
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    frame_rate = cap.get(cv2.CAP_PROP_FPS)
+    count = 0
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+        frame_filename = f"{output_folder}/frame_{count:04d}.jpg"
+        cv2.imwrite(frame_filename, frame)
+        count += 1
+
+    cap.release()
+    cv2.destroyAllWindows()
+    return frame_count, frame_rate
