@@ -74,7 +74,7 @@ class VideoPlayer(QMainWindow):
         self.rewindButton.setStyleSheet("background-color: white; color: black;")
         
         # Video position slider
-        self.videoSlider = QSlider(Qt.Horizontal)
+        self.videoSlider = ClickableSlider(Qt.Horizontal)
         self.videoSlider.setRange(0, 100)
         self.videoSlider.sliderMoved.connect(self.seek_video)
         self.videoSlider.setStyleSheet("""
@@ -100,6 +100,7 @@ class VideoPlayer(QMainWindow):
 
         # Layout for the function buttons
         self.controlsLayout = QHBoxLayout()
+        self.controlsLayout.addWidget(self.videoSlider)
         self.controlsLayout.addWidget(self.openButton)
         self.controlsLayout.addWidget(self.rewindButton)
         self.controlsLayout.addWidget(self.startPauseButton)
@@ -115,7 +116,6 @@ class VideoPlayer(QMainWindow):
         # Main layout
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(self.videoWidget)
-        mainLayout.addWidget(self.videoSlider)
         mainLayout.addWidget(self.controls)
 
         # Central widget
@@ -133,6 +133,12 @@ class VideoPlayer(QMainWindow):
         self.mouse_timer.setInterval(2000)  # Adjust this interval as needed
         self.mouse_timer.timeout.connect(self.hide_controls)
 
+        # Timer to update the video slider position
+        self.position_timer = QTimer(self)
+        self.position_timer.setInterval(1000)  # Update every second
+        self.position_timer.timeout.connect(lambda: self.update_slider(self.mediaPlayer.position()))
+        self.position_timer.start()
+
         # Track mouse to show buttons layout again
         self.setMouseTracking(True)
         self.videoWidget.setMouseTracking(True)
@@ -148,6 +154,7 @@ class VideoPlayer(QMainWindow):
             vf.load_video(self.mediaPlayer, fileName)
             self.startPauseButton.setEnabled(True)
             self.mediaPlayer.durationChanged.connect(self.update_duration)
+            self.mediaPlayer.positionChanged.connect(self.update_slider)
 
 
     def start_pause_video(self):
@@ -203,13 +210,21 @@ class VideoPlayer(QMainWindow):
         self.mediaPlayer.setPosition(position * 1000)
 
 
-    def update_slider(self):
+    def update_slider(self, position):
         if not self.videoSlider.isSliderDown():
-            self.videoSlider.setRange(self.mediaPlayer.position() / 1000)
-
+            self.videoSlider.setValue(int(position / 1000))
     
     def update_duration(self, duration):
-        self.videoSlider.setRange(0, duration / 1000)
+        self.videoSlider.setRange(0, int(duration / 1000))
+
+
+class ClickableSlider(QSlider):
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            value = QStyle.sliderValueFromPosition(self.minimum(), self.maximum(), event.x(), self.width())
+            self.setValue(value)
+            self.sliderMoved.emit(value)
+        super().mousePressEvent(event)
 
 
 if __name__ == "__main__":
