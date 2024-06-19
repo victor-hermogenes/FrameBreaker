@@ -18,16 +18,16 @@ class VideoPlayer(QMainWindow):
 
         self.openButton = QPushButton("Open Video")
         self.openButton.clicked.connect(self.open_file)
-        self.openButton.setStyleSheet("background-color: white")
+        self.openButton.setStyleSheet("background-color: white; color: black;")
 
         self.startPauseButton = QPushButton("Start")
         self.startPauseButton.clicked.connect(self.start_pause_video)
         self.startPauseButton.setEnabled(False)
-        self.startPauseButton.setStyleSheet("background-color: white")
+        self.startPauseButton.setStyleSheet("background-color: white; color: black;")
 
         self.fullscreenButton = QPushButton("Full Screen")
         self.fullscreenButton.clicked.connect(self.toggle_fullscreen)
-        self.fullscreenButton.setStyleSheet("background-color: white")
+        self.fullscreenButton.setStyleSheet("background-color: white; color: black;")
 
         # Layout for the buttons
         self.controlsLayout = QHBoxLayout()
