@@ -1,139 +1,143 @@
-import tkinter as tk
-from tkinter import filedialog, simpledialog, messagebox
-from PIL import Image, ImageTk
-from video_functions import start_video, pause_video, resume_video
-
-class VideoPlayer:
-    def __init__(self, master):
-        self.master = master
-        self.master.title("Video Player")
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog, QHBoxLayout, QSizePolicy, QSlider
+from PyQt5.QtMultimediaWidgets import QVideoWidget
+from PyQt5.QtCore import QTimer, Qt
+import sys
+import video_functions as vf
 
 
-        self.video_file = filedialog.askopenfilename(title="Select a video file")
-        if not self.video_file:
-            messagebox.showerror("Error", "No video file selected. Exiting.")
-            master.quit()
-            return
+class VideoPlayer(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        # Title and layout
+        self.setWindowTitle("Video Frame Breaker")
+        self.setGeometry(100, 100, 800, 600)
+
+        # Center background
+        self.videoWidget = QVideoWidget()
+        self.videoWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.videoWidget.setStyleSheet("background-color: black;")  # Ensure background is black
+
+        # Buttons and functions
+        self.openButton = QPushButton("Open Video")
+        self.openButton.clicked.connect(self.open_file)
+        self.openButton.setStyleSheet("background-color: white; color: black;")
+
+        self.startPauseButton = QPushButton("Start")
+        self.startPauseButton.clicked.connect(self.start_pause_video)
+        self.startPauseButton.setEnabled(False)
+        self.startPauseButton.setStyleSheet("background-color: white; color: black;")
+
+        self.fullscreenButton = QPushButton("Full Screen")
+        self.fullscreenButton.clicked.connect(self.toggle_fullscreen)
+        self.fullscreenButton.setStyleSheet("background-color: white; color: black;")
+
+        self.volumeSlider = QSlider(Qt.Horizontal)
+        self.volumeSlider.setRange(0, 100)
+        self.volumeSlider.setValue(100)
+        self.volumeSlider.valueChanged.connect(self.change_volume)
+        self.volumeSlider.setFixedWidth(100)
+        self.volumeSlider.setStyleSheet("background-color: white; color: black;")
+
+        # Layout for the function buttons
+        self.controlsLayout = QHBoxLayout()
+        self.controlsLayout.addWidget(self.openButton)
+        self.controlsLayout.addWidget(self.startPauseButton)
+        self.controlsLayout.addWidget(self.fullscreenButton)
+
+        # Layout for volume slider
+        self.volumeLayout = QHBoxLayout()
+        self.volumeLayout.addStretch()
+        self.volumeLayout.addWidget(self.volumeSlider)
         
+        self.volumeWidget = QWidget(self)
+        self.volumeWidget.setLayout(self.volumeLayout)
+
+        # Widget for the controls
+        self.controls = QWidget(self)
+        self.controls.setLayout(self.controlsLayout)
+        self.controls.setFixedHeight(50)  # Adjust height as needed
+
+        # Main layout
+        mainLayout = QVBoxLayout()
+        mainLayout.addWidget(self.videoWidget)
+        mainLayout.addWidget(self.controls)
+        mainLayout.addWidget(self.volumeWidget, alignment=Qt.AlignRight | Qt.AlignBottom)
+
+        # Central widget
+        centralWidget = QWidget(self)
+        centralWidget.setLayout(mainLayout)
+        self.setCentralWidget(centralWidget)
+
+        # Media player
+        self.mediaPlayer = vf.create_media_player(self.videoWidget)
+        self.is_paused = True
+        self.is_fullscreen = False
+
+        # Timer to make buttons layout vanish from fullscreen
+        self.mouse_timer = QTimer(self)
+        self.mouse_timer.setInterval(2000)  # Adjust this interval as needed
+        self.mouse_timer.timeout.connect(self.hide_controls)
+
+        # Track mouse to show buttons layout again
+        self.setMouseTracking(True)
+        self.videoWidget.setMouseTracking(True)
+        self.controls.setMouseTracking(True)
+        centralWidget.setMouseTracking(True)
+
+
+    def open_file(self):
+        fileName, _ = QFileDialog.getOpenFileName(self, "Open Video File", "",
+                                                  "Video files (*.mp4 *.fkv *.ts *.mts *.avi)")
         
-        self.frame = tk.Frame(master)
-        self.frame.pack()
+        if fileName:
+            vf.load_video(self.mediaPlayer, fileName)
+            self.startPauseButton.setEnabled(True)
 
 
-        self.video_label = tk.Label(master)
-        self.video_label.pack()
+    def start_pause_video(self):
+        self.is_paused = vf.toggle_play_pause(self.mediaPlayer, self.is_paused)
+        self.startPauseButton.setText("Pause" if not self.is_paused else "Start")
 
 
-        self.control_frame = tk.Frame(master)
-        self.control_frame.pack()
+    def toggle_fullscreen(self):
+        if self.is_fullscreen:
+            self.showNormal()
+            self.setWindowFlags(self.windowFlags() & ~Qt.FramelessWindowHint)
+            self.setStyleSheet("")
+            self.show()
+            self.fullscreenButton.setText("Full Screen")
+            self.mouse_timer.stop()
+            self.controls.show()
+        else:
+            self.showFullScreen()
+            self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
+            self.setStyleSheet("background-color: black;")
+            self.show()
+            self.fullscreenButton.setText("Exit Full Screen")
+            self.mouse_timer.start()
+
+        self.is_fullscreen = not self.is_fullscreen
 
 
-        self.icon_size = (30, 30)
-        self.start_icon = ImageTk.PhotoImage(Image.open("icons/play_replay.ico").resize(self.icon_size, Image.Resampling.LANCZOS))
-        self.pause_icon = ImageTk.PhotoImage(Image.open("icons/pause.ico").resize(self.icon_size, Image.Resampling.LANCZOS))
-        self.resume_icon = ImageTk.PhotoImage(Image.open("icons/start.ico").resize(self.icon_size, Image.Resampling.LANCZOS))
-        self.advance_icon = ImageTk.PhotoImage(Image.open("icons/Forward.ico").resize(self.icon_size, Image.Resampling.LANCZOS))
-        self.goback_icon = ImageTk.PhotoImage(Image.open("icons/Back.ico").resize(self.icon_size, Image.Resampling.LANCZOS))
-        self.speed_icon = ImageTk.PhotoImage(Image.open("icons/speed_rate.ico").resize(self.icon_size, Image.Resampling.LANCZOS))
-        self.break_icon = ImageTk.PhotoImage(Image.open("icons/corte.ico").resize(self.icon_size, Image.Resampling.LANCZOS))
-        self.close_icon = ImageTk.PhotoImage(Image.open("icons/sair.ico").resize(self.icon_size, Image.Resampling.LANCZOS))
+    def hide_controls(self):
+        if self.is_fullscreen:
+            self.controls.hide()
 
 
-        self.start_button = tk.Button(self.control_frame, image=self.start_icon, command=self.start_video, bg='white')
-        self.start_button.pack(side=tk.LEFT)
-
-        self.pause_button = tk.Button(self.control_frame, image=self.pause_icon, command=self.toggle_pause, bg='white')
-        self.pause_button.pack(side=tk.LEFT)
-
-
-        self.goback_button = tk.Button(self.control_frame, image=self.goback_icon, command=self.goback_video, bg='white')
-        self.goback_button.pack(side=tk.LEFT)
-
-
-        self.advance_button = tk.Button(self.control_frame, image=self.advance_icon, command=self.advance_video, bg='white')
-        self.advance_button.pack(side=tk.LEFT)
-
-
-        self.speed_button = tk.Button(self.control_frame, image=self.speed_icon, command=self.set_speed, bg='white')
-        self.speed_button.pack(side=tk.LEFT)
-
-
-        self.break_button = tk.Button(self.control_frame, image=self.break_icon, command=self.break_frame, bg='white')
-        self.break_button.pack(side=tk.LEFT)
-
-
-        self.close_button = tk.Button(self.control_frame, image=self.close_icon, command=self.on_closing, bg='white')
-        self.close_button.pack(side=tk.LEFT)
-
-
-        self.player = None
-        self.playing = [False]
-        self.paused = [False]
-        self.speed = 1.0
-
-
-    def start_video(self):
-        try:
-            print("Start video button clicked")
-            if self.player:
-                print("Pausing and closing existing player before restarting")
-                self.playing[0] = False
-                if not self.paused[0]:
-                    print("Pausing current video")
-                    pause_video(self.player, self.paused)
-                self.player.close_player()
-                self.player = None
-                print("Existing player closed")
-            
-            print("Calling start_video from video_functions.py")
-            self.player = start_video(self.video_file, self.speed, self.playing, self.paused, self.video_label)
-            if self.player:
-                print("New player started successfully")
-                self.playing[0] = True
-                self.paused[0] = False
-                self.pause_button.config(image=self.pause_icon)
-            else:
-                print("Failed to start new player")
-        except Exception as e:
-            print(f"Error in start_video (main.py): {e}")
-
-
-    def toggle_pause(self):
-        try:
-            print("Toggle pause button clicked")
-            if self.paused[0]:
-                resume_video(self.player, self.paused)
-                self.pause_button.config(image=self.pause_icon)
-            else:
-                pause_video(self.player, self.paused)
-                self.pause_button.config(image=self.resume_icon)
-            print("Pause toggle successful")
-        except Exception as e:
-            print(f"Error in toggle_pause (main.py): {e}")
-
-
-    def advance_video(self):
-        print("Advance 10 sec")
-
-
-    def goback_video(self):
-        print("Go back 10 sec")
-
-
-    def set_speed(self):
-        print("Set speed")
-
-
-    def break_frame(self):
-        print("Break frame")
+    def mouseMoveEvent(self, event):
+        if self.is_fullscreen:
+            self.controls.show()
+            self.mouse_timer.start()
+        super().mouseMoveEvent(event)
 
     
-    def on_closing(self):
-        print("Close player")
-        self.master.destroy()
+    def change_volume(self, value):
+        vf.set_volume(self.mediaPlayer, value)
 
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = VideoPlayer(root)
-    root.mainloop()
+    app = QApplication(sys.argv)
+    player = VideoPlayer()
+    player.show()
+    sys.exit(app.exec_())
