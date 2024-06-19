@@ -20,7 +20,7 @@ class VideoPlayer(QMainWindow):
 
         self.startPauseButton = QPushButton("Start")
         self.startPauseButton.clicked.connect(self.start_pause_video)
-        self.startpauseButton.setEnabled(False)
+        self.startPauseButton.setEnabled(False)
 
 
         layout = QVBoxLayout()
