@@ -72,6 +72,31 @@ class VideoPlayer(QMainWindow):
         self.rewindButton.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipBackward))
         self.rewindButton.clicked.connect(self.rewind_video)
         self.rewindButton.setStyleSheet("background-color: white; color: black;")
+        
+        # Video position slider
+        self.videoSlider = QSlider(Qt.Horizontal)
+        self.videoSlider.setRange(0, 100)
+        self.videoSlider.sliderMoved.connect(self.seek_video)
+        self.videoSlider.setStyleSheet("""
+            QSlider::groove:horizontal {
+                background: gray;
+                height: 6px;
+            }
+            QSlider::handle:horizontal {
+                background: white;
+                border: 1px solid #5c5c5c;
+                width: 10px;
+                height: 10px;
+                border-radius: 5px;
+                margin: -2px 0;
+            }
+            QSlider::sub-page:horizontal {
+                background: blue;
+            }
+            QSlider::add-page:horizontal {
+                background: lightblue;
+            }
+        """)
 
         # Layout for the function buttons
         self.controlsLayout = QHBoxLayout()
@@ -90,6 +115,7 @@ class VideoPlayer(QMainWindow):
         # Main layout
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(self.videoWidget)
+        mainLayout.addWidget(self.videoSlider)
         mainLayout.addWidget(self.controls)
 
         # Central widget
@@ -121,6 +147,7 @@ class VideoPlayer(QMainWindow):
         if fileName:
             vf.load_video(self.mediaPlayer, fileName)
             self.startPauseButton.setEnabled(True)
+            self.mediaPlayer.durationChanged.connect(self.update_duration)
 
 
     def start_pause_video(self):
@@ -170,6 +197,19 @@ class VideoPlayer(QMainWindow):
     
     def rewind_video(self):
         vf.rewind(self.mediaPlayer, 10)
+
+
+    def seek_video(self, position):
+        self.mediaPlayer.setPosition(position * 1000)
+
+
+    def update_slider(self):
+        if not self.videoSlider.isSliderDown():
+            self.videoSlider.setRange(self.mediaPlayer.position() / 1000)
+
+    
+    def update_duration(self, duration):
+        self.videoSlider.setRange(0, duration / 1000)
 
 
 if __name__ == "__main__":
