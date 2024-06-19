@@ -1,6 +1,8 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog, QHBoxLayout, QSizePolicy, QSlider
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtGui import QIcon
+from PyQt5.Qt import QStyle
 import sys
 import video_functions as vf
 
@@ -16,19 +18,22 @@ class VideoPlayer(QMainWindow):
         # Center background
         self.videoWidget = QVideoWidget()
         self.videoWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.videoWidget.setStyleSheet("background-color: black;")  # Ensure background is black
+        self.videoWidget.setStyleSheet("background-color: black;")
 
         # Buttons and functions
-        self.openButton = QPushButton("Open Video")
+        self.openButton = QPushButton()
+        self.openButton.setIcon(self.style().standardIcon(QStyle.SP_DialogOpenButton))
         self.openButton.clicked.connect(self.open_file)
         self.openButton.setStyleSheet("background-color: white; color: black;")
 
-        self.startPauseButton = QPushButton("Start")
+        self.startPauseButton = QPushButton()
+        self.startPauseButton.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
         self.startPauseButton.clicked.connect(self.start_pause_video)
         self.startPauseButton.setEnabled(False)
         self.startPauseButton.setStyleSheet("background-color: white; color: black;")
 
-        self.fullscreenButton = QPushButton("Full Screen")
+        self.fullscreenButton = QPushButton()
+        self.fullscreenButton.setIcon(self.style().standardIcon(QStyle.SP_TitleBarMaxButton))
         self.fullscreenButton.clicked.connect(self.toggle_fullscreen)
         self.fullscreenButton.setStyleSheet("background-color: white; color: black;")
 
@@ -108,7 +113,7 @@ class VideoPlayer(QMainWindow):
 
     def start_pause_video(self):
         self.is_paused = vf.toggle_play_pause(self.mediaPlayer, self.is_paused)
-        self.startPauseButton.setText("Pause" if not self.is_paused else "Start")
+        self.startPauseButton.setIcon(self.style().standardIcon(QStyle.SP_MediaPause if not self.is_paused else QStyle.SP_MediaPlay))
 
 
     def toggle_fullscreen(self):
@@ -117,7 +122,7 @@ class VideoPlayer(QMainWindow):
             self.setWindowFlags(self.windowFlags() & ~Qt.FramelessWindowHint)
             self.setStyleSheet("")
             self.show()
-            self.fullscreenButton.setText("Full Screen")
+            self.fullscreenButton.setIcon(self.style().standardIcon(QStyle.SP_TitleBarMaxButton))
             self.mouse_timer.stop()
             self.controls.show()
         else:
@@ -125,7 +130,7 @@ class VideoPlayer(QMainWindow):
             self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
             self.setStyleSheet("background-color: black;")
             self.show()
-            self.fullscreenButton.setText("Exit Full Screen")
+            self.fullscreenButton.setIcon(self.style().standardIcon(QStyle.SP_TitleBarNormalButton))
             self.mouse_timer.start()
 
         self.is_fullscreen = not self.is_fullscreen
