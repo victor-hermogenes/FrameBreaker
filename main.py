@@ -35,23 +35,35 @@ class VideoPlayer(QMainWindow):
         self.volumeSlider = QSlider(Qt.Horizontal)
         self.volumeSlider.setRange(0, 100)
         self.volumeSlider.setValue(100)
+        self.volumeSlider.setFixedSize(100, 30)
         self.volumeSlider.valueChanged.connect(self.change_volume)
-        self.volumeSlider.setFixedWidth(100)
-        self.volumeSlider.setStyleSheet("background-color: white; color: black;")
+        self.volumeSlider.setStyleSheet("""
+            QSlider::groove:horizontal {
+                background: transparent;
+                height: 6px;                            
+            }
+            QSlider::handle:horizontal {
+                background: blue;
+                border: 1px solid #5c5c5c;
+                width: 15px;
+                height: 15px;
+                border-radius: 7.5px; /* half of handle size */
+                margin: -5px 0; /* Handle size adjustment */                            
+            }
+            QSlider::sub-page:horizontal {
+                background: blue;                            
+            }
+            QSlider::add-page:horizontal {
+                background: lightblue;
+            }    
+        """)
 
         # Layout for the function buttons
         self.controlsLayout = QHBoxLayout()
         self.controlsLayout.addWidget(self.openButton)
         self.controlsLayout.addWidget(self.startPauseButton)
         self.controlsLayout.addWidget(self.fullscreenButton)
-
-        # Layout for volume slider
-        self.volumeLayout = QHBoxLayout()
-        self.volumeLayout.addStretch()
-        self.volumeLayout.addWidget(self.volumeSlider)
-        
-        self.volumeWidget = QWidget(self)
-        self.volumeWidget.setLayout(self.volumeLayout)
+        self.controlsLayout.addWidget(self.volumeSlider)
 
         # Widget for the controls
         self.controls = QWidget(self)
@@ -62,7 +74,6 @@ class VideoPlayer(QMainWindow):
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(self.videoWidget)
         mainLayout.addWidget(self.controls)
-        mainLayout.addWidget(self.volumeWidget, alignment=Qt.AlignRight | Qt.AlignBottom)
 
         # Central widget
         centralWidget = QWidget(self)
