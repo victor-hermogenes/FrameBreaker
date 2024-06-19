@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog, QHBoxLayout, QSizePolicy, QSlider
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog, QHBoxLayout, QSizePolicy, QSlider, QSpacerItem
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtGui import QIcon
@@ -23,23 +23,27 @@ class VideoPlayer(QMainWindow):
         # Buttons and functions
         self.openButton = QPushButton()
         self.openButton.setIcon(self.style().standardIcon(QStyle.SP_DialogOpenButton))
+        self.openButton.setToolTip("Open Video File")
         self.openButton.clicked.connect(self.open_file)
         self.openButton.setStyleSheet("background-color: white; color: black;")
 
         self.startPauseButton = QPushButton()
         self.startPauseButton.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
+        self.startPauseButton.setToolTip("Play/Pause")
         self.startPauseButton.clicked.connect(self.start_pause_video)
         self.startPauseButton.setEnabled(False)
         self.startPauseButton.setStyleSheet("background-color: white; color: black;")
 
         self.fullscreenButton = QPushButton()
         self.fullscreenButton.setIcon(self.style().standardIcon(QStyle.SP_TitleBarMaxButton))
+        self.fullscreenButton.setToolTip("Toggle Fullscreen")
         self.fullscreenButton.clicked.connect(self.toggle_fullscreen)
         self.fullscreenButton.setStyleSheet("background-color: white; color: black;")
 
         self.volumeSlider = QSlider(Qt.Horizontal)
         self.volumeSlider.setRange(0, 100)
         self.volumeSlider.setValue(100)
+        self.volumeSlider.setToolTip("Volume")
         self.volumeSlider.setFixedSize(100, 30)
         self.volumeSlider.valueChanged.connect(self.change_volume)
         self.volumeSlider.setStyleSheet("""
@@ -65,17 +69,20 @@ class VideoPlayer(QMainWindow):
 
         self.advanceButton = QPushButton()
         self.advanceButton.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipForward))
+        self.advanceButton.setToolTip("Skip Forward")
         self.advanceButton.clicked.connect(self.advance_video)
         self.advanceButton.setStyleSheet("background-color: white; color: black;")
 
         self.rewindButton = QPushButton()
         self.rewindButton.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipBackward))
+        self.rewindButton.setToolTip("Skip Backward")
         self.rewindButton.clicked.connect(self.rewind_video)
         self.rewindButton.setStyleSheet("background-color: white; color: black;")
         
         # Video position slider
         self.videoSlider = ClickableSlider(Qt.Horizontal)
         self.videoSlider.setRange(0, 100)
+        self.videoSlider.setToolTip("Seek Video")
         self.videoSlider.sliderMoved.connect(self.seek_video)
         self.videoSlider.setStyleSheet("""
             QSlider::groove:horizontal {
@@ -100,13 +107,17 @@ class VideoPlayer(QMainWindow):
 
         # Layout for the function buttons
         self.controlsLayout = QHBoxLayout()
-        self.controlsLayout.addWidget(self.videoSlider)
         self.controlsLayout.addWidget(self.openButton)
         self.controlsLayout.addWidget(self.rewindButton)
         self.controlsLayout.addWidget(self.startPauseButton)
         self.controlsLayout.addWidget(self.advanceButton)
         self.controlsLayout.addWidget(self.fullscreenButton)
         self.controlsLayout.addWidget(self.volumeSlider)
+
+        # Spacer to centralize the video slider
+        spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.controlsLayout.insertItem(0, spacer)
+        self.controlsLayout.insertItem(6, spacer)
 
         # Widget for the controls
         self.controls = QWidget(self)
@@ -116,6 +127,7 @@ class VideoPlayer(QMainWindow):
         # Main layout
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(self.videoWidget)
+        mainLayout.addWidget(self.videoSlider)
         mainLayout.addWidget(self.controls)
 
         # Central widget
@@ -168,6 +180,7 @@ class VideoPlayer(QMainWindow):
             self.setWindowFlags(self.windowFlags() & ~Qt.FramelessWindowHint)
             self.setStyleSheet("")
             self.show()
+            self.videoSlider.show()
             self.fullscreenButton.setIcon(self.style().standardIcon(QStyle.SP_TitleBarMaxButton))
             self.mouse_timer.stop()
             self.controls.show()
@@ -176,6 +189,7 @@ class VideoPlayer(QMainWindow):
             self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
             self.setStyleSheet("background-color: black;")
             self.show()
+            self.videoSlider.hide()
             self.fullscreenButton.setIcon(self.style().standardIcon(QStyle.SP_TitleBarNormalButton))
             self.mouse_timer.start()
 
@@ -185,11 +199,13 @@ class VideoPlayer(QMainWindow):
     def hide_controls(self):
         if self.is_fullscreen:
             self.controls.hide()
+            self.videoSlider.hide()
 
 
     def mouseMoveEvent(self, event):
         if self.is_fullscreen:
             self.controls.show()
+            self.videoSlider.show()
             self.mouse_timer.start()
         super().mouseMoveEvent(event)
 
