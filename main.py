@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog, QHBoxLayout, QSizePolicy
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtCore import QTimer, Qt
 import sys
@@ -9,59 +9,59 @@ class VideoPlayer(QMainWindow):
     def __init__(self):
         super().__init__()
 
-
-        self.setWindowTitle("PyQt5 Video Player")
+        self.setWindowTitle("Video Frame Breaker")
         self.setGeometry(100, 100, 800, 600)
 
-
         self.videoWidget = QVideoWidget()
-
+        self.videoWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.videoWidget.setStyleSheet("background-color: black;")  # Ensure background is black
 
         self.openButton = QPushButton("Open Video")
         self.openButton.clicked.connect(self.open_file)
+        self.openButton.setStyleSheet("background-color: white")
 
         self.startPauseButton = QPushButton("Start")
         self.startPauseButton.clicked.connect(self.start_pause_video)
         self.startPauseButton.setEnabled(False)
-
+        self.startPauseButton.setStyleSheet("background-color: white")
 
         self.fullscreenButton = QPushButton("Full Screen")
         self.fullscreenButton.clicked.connect(self.toggle_fullscreen)
+        self.fullscreenButton.setStyleSheet("background-color: white")
 
+        # Layout for the buttons
+        self.controlsLayout = QHBoxLayout()
+        self.controlsLayout.addWidget(self.openButton)
+        self.controlsLayout.addWidget(self.startPauseButton)
+        self.controlsLayout.addWidget(self.fullscreenButton)
 
-        layout = QVBoxLayout()
-        layout.addWidget(self.videoWidget)
-        layout.addWidget(self.openButton)
-        layout.addWidget(self.startPauseButton)
-        layout.addWidget(self.fullscreenButton)
-
+        # Widget for the controls
         self.controls = QWidget(self)
-        self.controls.setLayout(layout)
+        self.controls.setLayout(self.controlsLayout)
+        self.controls.setFixedHeight(50)  # Adjust height as needed
 
-
+        # Main layout
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(self.videoWidget)
         mainLayout.addWidget(self.controls)
 
-
-        widget = QWidget(self)
-        widget.setLayout(layout)
-        self.setCentralWidget(widget)
-
+        # Central widget
+        centralWidget = QWidget(self)
+        centralWidget.setLayout(mainLayout)
+        self.setCentralWidget(centralWidget)
 
         self.mediaPlayer = vf.create_media_player(self.videoWidget)
         self.is_paused = True
         self.is_fullscreen = False
 
-
         self.mouse_timer = QTimer(self)
-        self.mouse_timer.setInterval(1000)
+        self.mouse_timer.setInterval(2000)  # Adjust this interval as needed
         self.mouse_timer.timeout.connect(self.hide_controls)
-
 
         self.setMouseTracking(True)
         self.videoWidget.setMouseTracking(True)
         self.controls.setMouseTracking(True)
+        centralWidget.setMouseTracking(True)
 
 
     def open_file(self):
@@ -82,15 +82,18 @@ class VideoPlayer(QMainWindow):
         if self.is_fullscreen:
             self.showNormal()
             self.setWindowFlags(self.windowFlags() & ~Qt.FramelessWindowHint)
+            self.setStyleSheet("")
             self.show()
             self.fullscreenButton.setText("Full Screen")
+            self.mouse_timer.stop()
+            self.controls.show()
         else:
             self.showFullScreen()
             self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
+            self.setStyleSheet("background-color: black;")
             self.show()
             self.fullscreenButton.setText("Exit Full Screen")
             self.mouse_timer.start()
-
 
         self.is_fullscreen = not self.is_fullscreen
 
