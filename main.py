@@ -1,9 +1,10 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog, QHBoxLayout, QSizePolicy, QSlider, QSpacerItem
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog, QHBoxLayout, QSizePolicy, QSlider, QSpacerItem, QMessageBox
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.Qt import QStyle
 import sys
+import os
 import video_functions as vf
 
 
@@ -78,6 +79,11 @@ class VideoPlayer(QMainWindow):
         self.rewindButton.setToolTip("Skip Backward")
         self.rewindButton.clicked.connect(self.rewind_video)
         self.rewindButton.setStyleSheet("background-color: white; color: black;")
+
+        self.extractFramesButton = QPushButton("Extract Frames")
+        self.extractFramesButton.setToolTip("Extract Frames from video")
+        self.extractFramesButton.clicked.connect(self.extract_frames)
+        self.extractFramesButton.setStyleSheet("background-color: white; color: black;")
         
         # Video position slider
         self.videoSlider = ClickableSlider(Qt.Horizontal)
@@ -113,6 +119,7 @@ class VideoPlayer(QMainWindow):
         self.controlsLayout.addWidget(self.advanceButton)
         self.controlsLayout.addWidget(self.fullscreenButton)
         self.controlsLayout.addWidget(self.volumeSlider)
+        self.controlsLayout.addWidget(self.extractFramesButton)
 
         # Spacer to centralize the video slider
         spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
@@ -157,12 +164,15 @@ class VideoPlayer(QMainWindow):
         self.controls.setMouseTracking(True)
         centralWidget.setMouseTracking(True)
 
+        self.video_path = ""
+
 
     def open_file(self):
         fileName, _ = QFileDialog.getOpenFileName(self, "Open Video File", "",
                                                   "Video files (*.mp4 *.fkv *.ts *.mts *.avi)")
         
         if fileName:
+            self.video_path = fileName
             vf.load_video(self.mediaPlayer, fileName)
             self.startPauseButton.setEnabled(True)
             self.mediaPlayer.durationChanged.connect(self.update_duration)
@@ -232,6 +242,17 @@ class VideoPlayer(QMainWindow):
     
     def update_duration(self, duration):
         self.videoSlider.setRange(0, int(duration / 1000))
+
+
+    def extract_frames(self):
+        if not self.video_path:
+            QMessageBox.warning(self, "No Video Loaded", f"Please load a video file first.")
+            return
+        
+        output_folder = QFileDialog.getExistingDirectory(self, "Select Output Folder")
+        if output_folder:
+            frame_count, frame_rate = vf.extract_frames(self.video_path, output_folder)
+            QMessageBox.information(self, "Extraction Complete", f"Extracted {frame_count} frames at {frame_rate} FPS to {output_folder}")
 
 
 class ClickableSlider(QSlider):
