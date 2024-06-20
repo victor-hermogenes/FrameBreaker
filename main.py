@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog, QHBoxLayout, QSizePolicy, QSlider, QSpacerItem, QMessageBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog, QHBoxLayout, QSizePolicy, QSlider, QSpacerItem, QMessageBox, QStyleOptionSlider
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtCore import QTimer, Qt
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QColor, QLinearGradient
 from PyQt5.Qt import QStyle
 import sys
 import os
@@ -21,95 +21,88 @@ class VideoPlayer(QMainWindow):
         self.videoWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.videoWidget.setStyleSheet("background-color: black;")
 
-        # Buttons and functions
-        self.openButton = QPushButton()
-        self.openButton.setIcon(self.style().standardIcon(QStyle.SP_DialogOpenButton))
-        self.openButton.setToolTip("Open Video File")
-        self.openButton.clicked.connect(self.open_file)
-        self.openButton.setStyleSheet("background-color: white; color: black;")
+        # Button and Slyder Style:
+        button_style = """
+            QPushButton {
+                background-color: qlineargradient(
+                    x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 #5f6368, stop: 1 #2c2e33
+                );
+                color: white;
+                border: none;
+                border-radius: 10px;
+                padding: 10px;
+                font-size: 14px;            
+            }
+            QPushButton:hover {
+                background-color: qlineargradient(
+                    x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 #7d8187, stop: 1 #3c3e44 
+                );
+            }
+            QPushButton: pressed {
+                background-color: qlineargradient(
+                    x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 #45484d, stop: 1 #202226
+                );
+            }
+        """
 
-        self.startPauseButton = QPushButton()
-        self.startPauseButton.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
-        self.startPauseButton.setToolTip("Play/Pause")
-        self.startPauseButton.clicked.connect(self.start_pause_video)
-        self.startPauseButton.setEnabled(False)
-        self.startPauseButton.setStyleSheet("background-color: white; color: black;")
+        slider_style = """
+            QSlider::groove:horizontal {
+                background: gray;
+                height: 6px;
+                border-radius: 3px;
+            }
+            QSlider::handle:horizontal {
+                background: white;
+                border: none;
+                width: 15px;
+                height: 15px;
+                border-radius: 7.5px;
+                margin: -5px 0;
+            }
+            QSlider::sub-page:horizontal {
+                background: #5c5c5c;
+            }
+            QSlider::add-page:horizontal {
+                background: lightgray;
+            }
+        """
 
-        self.fullscreenButton = QPushButton()
-        self.fullscreenButton.setIcon(self.style().standardIcon(QStyle.SP_TitleBarMaxButton))
-        self.fullscreenButton.setToolTip("Toggle Fullscreen")
-        self.fullscreenButton.clicked.connect(self.toggle_fullscreen)
-        self.fullscreenButton.setStyleSheet("background-color: white; color: black;")
+        self.openButton = self.create_button(self.style().standardIcon(QStyle.SP_DialogOpenButton), "Open Video File", self.open_file)
+        self.startPauseButton = self.create_button(self.style().standardIcon(QStyle.SP_MediaPlay), "Play/Pause", self.start_pause_video)
+        self.fullscreenButton = self.create_button(self.style().standardIcon(QStyle.SP_TitleBarMaxButton), "Toggle Fullscreen", self.toggle_fullscreen)
+        self.advanceButton = self.create_button(self.style().standardIcon(QStyle.SP_MediaSkipForward), "Skip Forward", self.advance_video)
+        self.rewindButton = self.create_button(self.style().standardIcon(QStyle.SP_MediaSkipBackward), "Skip Backward", self.rewind_video)
+        self.extractFramesButton = QPushButton("Extract Frames")
+        self.extractFramesButton.setToolTip("Extract Frames from Video")
+        self.extractFramesButton.clicked.connect(self.extract_frames)
+        self.extractFramesButton.setStyleSheet(button_style)
 
+        # Apply styles
+        self.openButton.setStyleSheet(button_style)
+        self.startPauseButton.setStyleSheet(button_style)
+        self.fullscreenButton.setStyleSheet(button_style)
+        self.advanceButton.setStyleSheet(button_style)
+        self.rewindButton.setStyleSheet(button_style)
+        self.extractFramesButton.setStyleSheet(button_style)
+        
+        # Volume slider
         self.volumeSlider = QSlider(Qt.Horizontal)
         self.volumeSlider.setRange(0, 100)
         self.volumeSlider.setValue(100)
         self.volumeSlider.setToolTip("Volume")
         self.volumeSlider.setFixedSize(100, 30)
         self.volumeSlider.valueChanged.connect(self.change_volume)
-        self.volumeSlider.setStyleSheet("""
-            QSlider::groove:horizontal {
-                background: transparent;
-                height: 6px;                            
-            }
-            QSlider::handle:horizontal {
-                background: blue;
-                border: 1px solid #5c5c5c;
-                width: 15px;
-                height: 15px;
-                border-radius: 7.5px; /* half of handle size */
-                margin: -5px 0; /* Handle size adjustment */                            
-            }
-            QSlider::sub-page:horizontal {
-                background: blue;                            
-            }
-            QSlider::add-page:horizontal {
-                background: lightblue;
-            }    
-        """)
+        self.volumeSlider.setStyleSheet(slider_style)
 
-        self.advanceButton = QPushButton()
-        self.advanceButton.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipForward))
-        self.advanceButton.setToolTip("Skip Forward")
-        self.advanceButton.clicked.connect(self.advance_video)
-        self.advanceButton.setStyleSheet("background-color: white; color: black;")
-
-        self.rewindButton = QPushButton()
-        self.rewindButton.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipBackward))
-        self.rewindButton.setToolTip("Skip Backward")
-        self.rewindButton.clicked.connect(self.rewind_video)
-        self.rewindButton.setStyleSheet("background-color: white; color: black;")
-
-        self.extractFramesButton = QPushButton("Extract Frames")
-        self.extractFramesButton.setToolTip("Extract Frames from video")
-        self.extractFramesButton.clicked.connect(self.extract_frames)
-        self.extractFramesButton.setStyleSheet("background-color: white; color: black;")
-        
-        # Video position slider
+        # Video Position slider
         self.videoSlider = ClickableSlider(Qt.Horizontal)
         self.videoSlider.setRange(0, 100)
         self.videoSlider.setToolTip("Seek Video")
         self.videoSlider.sliderMoved.connect(self.seek_video)
-        self.videoSlider.setStyleSheet("""
-            QSlider::groove:horizontal {
-                background: gray;
-                height: 6px;
-            }
-            QSlider::handle:horizontal {
-                background: white;
-                border: 1px solid #5c5c5c;
-                width: 10px;
-                height: 10px;
-                border-radius: 5px;
-                margin: -2px 0;
-            }
-            QSlider::sub-page:horizontal {
-                background: blue;
-            }
-            QSlider::add-page:horizontal {
-                background: lightblue;
-            }
-        """)
+        self.videoSlider.setStyleSheet(slider_style)
 
         # Layout for the function buttons
         self.controlsLayout = QHBoxLayout()
@@ -165,6 +158,41 @@ class VideoPlayer(QMainWindow):
         centralWidget.setMouseTracking(True)
 
         self.video_path = ""
+
+    
+    def create_button(self, icon, tooltip, callback):
+        button = QPushButton()
+        button.setIcon(self.color_icon(icon, QColor("#00D1D1")))
+        button.setToolTip(tooltip)
+        button.clicked.connect(callback)
+        return button
+    
+
+    def color_icon(self, icon, color):
+        pixmap = icon.pixmap(24, 24)
+        painter = QPainter(pixmap)
+        painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
+
+        # Create a gradient for the shiny effect
+        gradient = QLinearGradient(0, 0, 24, 24)
+        gradient.setColorAt(0, QColor("#00D1D1"))
+        gradient.setColorAt(1, QColor("#007777"))
+
+        painter.setBrush(gradient)
+        painter.setPen(Qt.NoPen)
+        painter.drawRect(pixmap.rect())
+
+        # Add a highlight for extra shininess
+        highlight = QLinearGradient(0, 0, 24, 24)
+        highlight.setColorAt(0, QColor(255, 255, 255, 100))
+        highlight.setColorAt(0.5, QColor(255, 255, 255, 50))
+        highlight.setColorAt(1, QColor(255, 255, 255, 0))
+        painter.setBrush(highlight)
+        painter.setPen(Qt.NoPen)
+        painter.drawRect(pixmap.rect())
+
+        painter.end()
+        return QIcon(pixmap)
 
 
     def open_file(self):
