@@ -21,33 +21,7 @@ class VideoPlayer(QMainWindow):
         self.videoWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.videoWidget.setStyleSheet("background-color: black;")
 
-        # Button and Slider Style:
-        button_style = """
-            QPushButton {
-                background-color: qlineargradient(
-                    x1: 0, y1: 0, x2: 0, y2: 1,
-                    stop: 0 #5f6368, stop: 1 #2c2e33
-                );
-                color: white;
-                border: none;
-                border-radius: 10px;
-                padding: 10px;
-                font-size: 14px;            
-            }
-            QPushButton:hover {
-                background-color: qlineargradient(
-                    x1: 0, y1: 0, x2: 0, y2: 1,
-                    stop: 0 #7d8187, stop: 1 #3c3e44 
-                );
-            }
-            QPushButton: pressed {
-                background-color: qlineargradient(
-                    x1: 0, y1: 0, x2: 0, y2: 1,
-                    stop: 0 #45484d, stop: 1 #202226
-                );
-            }
-        """
-
+        # Slider Style:
         slider_style = """
             QSlider::groove:horizontal {
                 background: gray;
@@ -70,23 +44,29 @@ class VideoPlayer(QMainWindow):
             }
         """
 
-        self.openButton = self.create_button(self.style().standardIcon(QStyle.SP_DialogOpenButton), "Open Video File", self.open_file)
-        self.startPauseButton = self.create_button(self.style().standardIcon(QStyle.SP_MediaPlay), "Play/Pause", self.start_pause_video)
-        self.fullscreenButton = self.create_button(self.style().standardIcon(QStyle.SP_TitleBarMaxButton), "Toggle Fullscreen", self.toggle_fullscreen)
-        self.advanceButton = self.create_button(self.style().standardIcon(QStyle.SP_MediaSkipForward), "Skip Forward", self.advance_video)
-        self.rewindButton = self.create_button(self.style().standardIcon(QStyle.SP_MediaSkipBackward), "Skip Backward", self.rewind_video)
-        self.extractFramesButton = QPushButton("Extract Frames")
-        self.extractFramesButton.setToolTip("Extract Frames from Video")
-        self.extractFramesButton.clicked.connect(self.extract_frames)
-        self.extractFramesButton.setStyleSheet(button_style)
+        # Using ShinyButton instead of QPushButton
+        self.openButton = ShinyButton("Open Video File", self)
+        self.startPauseButton = ShinyButton("Play/Pause", self)
+        self.fullscreenButton = ShinyButton("Toggle Fullscreen", self)
+        self.advanceButton = ShinyButton("Skip Forward", self)
+        self.rewindButton = ShinyButton("Skip Backward", self)
+        self.extractFramesButton = ShinyButton("Extract Frames", self)
 
-        # Apply styles
-        self.openButton.setStyleSheet(button_style)
-        self.startPauseButton.setStyleSheet(button_style)
-        self.fullscreenButton.setStyleSheet(button_style)
-        self.advanceButton.setStyleSheet(button_style)
-        self.rewindButton.setStyleSheet(button_style)
-        self.extractFramesButton.setStyleSheet(button_style)
+        # Set icons for buttons
+        self.openButton.setIcon(self.style().standardIcon(QStyle.SP_DirOpenIcon))
+        self.startPauseButton.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
+        self.fullscreenButton.setIcon(self.style().standardIcon(QStyle.SP_TitleBarMaxButton))
+        self.advanceButton.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipForward))
+        self.rewindButton.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipBackward))
+        self.extractFramesButton.setIcon(self.style().standardIcon(QStyle.SP_DialogSaveButton))
+
+        # Connect buttons to thei respective slots
+        self.openButton.clicked.connect(self.open_file)
+        self.startPauseButton.clicked.connect(self.start_pause_video)
+        self.fullscreenButton.clicked.connect(self.toggle_fullscreen)
+        self.advanceButton.clicked.connect(self.advance_video)
+        self.rewindButton.clicked.connect(self.rewind_video)
+        self.extractFramesButton.clicked.connect(self.extract_frames)
         
         # Volume slider
         self.volumeSlider = QSlider(Qt.Horizontal)
@@ -158,48 +138,6 @@ class VideoPlayer(QMainWindow):
         centralWidget.setMouseTracking(True)
 
         self.video_path = ""
-
-    
-    def create_button(self, icon, tooltip, callback):
-        button = QPushButton()
-        button.setIcon(self.color_icon(icon, QColor("#00D1D1")))
-        button.setToolTip(tooltip)
-        button.clicked.connect(callback)
-        return button
-    
-
-    def color_icon(self, icon, base_color):
-        # Step 1: Create a QPixmap object from the icon
-        pixmap = QPixmap(icon.pixmap(24, 24).size())
-
-        # Step 2: Use QPainter to draw on the pixmap
-        painter = QPainter(pixmap)
-        painter.setCompositionMode(QPainter.CompositionMode_Source)
-
-        # Step 3: Fill the entire pixmap area with the base turquoise color
-        painter.fillRect(pixmap.rect(), base_color)
-
-        # Draw the original icon over the filled background
-        original_pixmap = icon.pixmap(24,24)
-        painter.drawPixmap(pixmap.rect(), original_pixmap, original_pixmap.rect())
-
-        # Step 4: Add a highlight for extra shininess
-        gradient = QLinearGradient(0, 0, 24, 24)
-        gradient.setColorAt(0, QColor(255, 255, 255, 150))
-        gradient.setColorAt(0.5, QColor(255, 255, 255, 50))
-        gradient.setColorAt(1, QColor(255, 255, 255, 0))
-        painter.setCompositionMode(QPainter.CompositionMode_Overlay)
-        painter.setBrush(gradient)
-        painter.setPen(Qt.NoPen)
-
-        # Apply the gradient over the entire pixmap area
-        painter.drawRect(pixmap.rect())
-
-        # End the painting
-        painter.end()
-
-        # Step 5: Convert the modofied pixmap back to an icon
-        return QIcon(pixmap)
 
 
     def open_file(self):
@@ -297,6 +235,46 @@ class ClickableSlider(QSlider):
             self.setValue(value)
             self.sliderMoved.emit(value)
         super().mousePressEvent(event)
+
+
+class ShinyButton(QPushButton):
+    def __init__(self, text='', parent=None):
+        super().__init__(text, parent)
+        self.setMinimumHeight(40)
+        self.setMinimumWidth(100)
+
+    
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+
+        # create gradient
+        gradient = QLinearGradient(0, 0, 0, self.height())
+        gradient.setColorAt(0, QColor(0, 209, 209))
+        gradient.setColorAt(0.5, QColor(0, 180, 180))
+        gradient.setColorAt(1, QColor(0, 150, 150))
+
+        painter.setBrush(QBrush(gradient))
+        painter.setPen(Qt.NoPen)
+
+        # Draw rounded rect with gradient
+        rect = QRect(0, 0, self.width(), self.height())
+        painter.drawRoundedRect(rect, 10, 10)
+
+        # Draw the button text
+        painter.setPen(QColor(255, 255, 255))
+        painter.setFont(self.font())
+        painter.drawText(rect, Qt.AlignCenter, self.text())
+
+        # Draw the icon
+        icon = self.icon()
+        if not icon.isNull():
+            icon_size = self.iconSize()
+            pixmap = icon.pixmap(icon_size)
+            icon_rect = QRect((self.width() - icon_size.width()) // 2, 10, icon_size.width(), icon_size.height())
+            painter.drawPixmap(icon_rect, pixmap)
+
+        painter.end()
 
 
 if __name__ == "__main__":
