@@ -21,7 +21,7 @@ class VideoPlayer(QMainWindow):
         self.videoWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.videoWidget.setStyleSheet("background-color: black;")
 
-        # Button and Slyder Style:
+        # Button and Slider Style:
         button_style = """
             QPushButton {
                 background-color: qlineargradient(
@@ -168,15 +168,15 @@ class VideoPlayer(QMainWindow):
         return button
     
 
-    def color_icon(self, icon, color):
+    def color_icon(self, icon, base_color):
         pixmap = icon.pixmap(24, 24)
         painter = QPainter(pixmap)
         painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
 
-        # Create a gradient for the shiny effect
+        # Create a gradient for the shiny effect using the provided base color
         gradient = QLinearGradient(0, 0, 24, 24)
-        gradient.setColorAt(0, QColor("#00D1D1"))
-        gradient.setColorAt(1, QColor("#007777"))
+        gradient.setColorAt(0, QColor("#00D1D1"))  # Turquoise color
+        gradient.setColorAt(1, QColor("#007777"))  # Darker shade of turquoise
 
         painter.setBrush(gradient)
         painter.setPen(Qt.NoPen)
@@ -184,7 +184,8 @@ class VideoPlayer(QMainWindow):
 
         # Add a highlight for extra shininess
         highlight = QLinearGradient(0, 0, 24, 24)
-        highlight.setColorAt(0, QColor(255, 255, 255, 100))
+        highlight.setColorAt(0, QColor(255, 255, 255, 150))
+        highlight.setColorAt(0.5, QColor(255, 255, 255, 50))
         highlight.setColorAt(1, QColor(255, 255, 255, 0))
         painter.setBrush(highlight)
         painter.setPen(Qt.NoPen)
