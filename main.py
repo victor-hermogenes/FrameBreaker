@@ -169,29 +169,36 @@ class VideoPlayer(QMainWindow):
     
 
     def color_icon(self, icon, base_color):
-        pixmap = icon.pixmap(24, 24)
+        # Step 1: Create a QPixmap object from the icon
+        pixmap = QPixmap(icon.pixmap(24, 24).size())
+
+        # Step 2: Use QPainter to draw on the pixmap
         painter = QPainter(pixmap)
-        painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
+        painter.setCompositionMode(QPainter.CompositionMode_Source)
 
-        # Create a gradient for the shiny effect using the provided base color
+        # Step 3: Fill the entire pixmap area with the base turquoise color
+        painter.fillRect(pixmap.rect(), base_color)
+
+        # Draw the original icon over the filled background
+        original_pixmap = icon.pixmap(24,24)
+        painter.drawPixmap(pixmap.rect(), original_pixmap, original_pixmap.rect())
+
+        # Step 4: Add a highlight for extra shininess
         gradient = QLinearGradient(0, 0, 24, 24)
-        gradient.setColorAt(0, QColor("#00D1D1"))  # Turquoise color
-        gradient.setColorAt(1, QColor("#007777"))  # Darker shade of turquoise
-
+        gradient.setColorAt(0, QColor(255, 255, 255, 150))
+        gradient.setColorAt(0.5, QColor(255, 255, 255, 50))
+        gradient.setColorAt(1, QColor(255, 255, 255, 0))
+        painter.setCompositionMode(QPainter.CompositionMode_Overlay)
         painter.setBrush(gradient)
         painter.setPen(Qt.NoPen)
+
+        # Apply the gradient over the entire pixmap area
         painter.drawRect(pixmap.rect())
 
-        # Add a highlight for extra shininess
-        highlight = QLinearGradient(0, 0, 24, 24)
-        highlight.setColorAt(0, QColor(255, 255, 255, 150))
-        highlight.setColorAt(0.5, QColor(255, 255, 255, 50))
-        highlight.setColorAt(1, QColor(255, 255, 255, 0))
-        painter.setBrush(highlight)
-        painter.setPen(Qt.NoPen)
-        painter.drawRect(pixmap.rect())
-
+        # End the painting
         painter.end()
+
+        # Step 5: Convert the modofied pixmap back to an icon
         return QIcon(pixmap)
 
 
