@@ -309,7 +309,7 @@ class VideoPlayer(QMainWindow):
     def toggle_fullscreen(self):
         if self.is_fullscreen:
             self.showNormal()
-            self.setWindowFlags(self.windowFlags() & ~Qt.FramelessWindowHint)
+            self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
             self.setStyleSheet("")
             self.show()
             self.videoSlider.show()
@@ -407,22 +407,47 @@ class ShinyButton(QPushButton):
         super().__init__(text, parent)
         self.setMinimumHeight(40)
         self.setMinimumWidth(100)
+        self.setStyleSheet(self.get_button_style())
 
     
+    def get_button_style(self):
+        return """
+        QPushButton {
+            background-color: qlineargradient(
+                spread:pad, x1:0, y1:0, x2:1, y2:1,
+                stop:0 rgba(0, 209, 209, 255), stop:1 rgba(0, 150, 150, 255));
+            color: white;
+            border: none;
+            border-radius: 10px;
+        }
+        QPushButton:hover {
+            background-color: qlineargradient(
+                spread:pad, x1:0, y1:0, x2:1, y2:1,
+                stop:0 rgba(0, 255, 255, 255), stop:1 rgba(0, 180, 180, 255));
+        }
+        """
+
+
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
-        # create gradient
-        gradient = QLinearGradient(0, 0, 0, self.height())
-        gradient.setColorAt(0, QColor(0, 209, 209))
-        gradient.setColorAt(0.5, QColor(0, 180, 180))
-        gradient.setColorAt(1, QColor(0, 150, 150))
+        # Determine the gradient based on hover state
+        if self.underMouse():
+            gradient = QLinearGradient(0, 0, 0, self.height())
+            gradient.setColorAt(0, QColor(0, 255, 255))
+            gradient.setColorAt(0.5, QColor(0, 200, 200))
+            gradient.setColorAt(1, QColor(0, 180, 180))
+        else:
+            gradient = QLinearGradient(0, 0, 0, self.height())
+            gradient.setColorAt(0, QColor(0, 209, 209))
+            gradient.setColorAt(0.5, QColor(0, 180, 180))
+            gradient.setColorAt(1, QColor(0, 150, 150))
 
         painter.setBrush(QBrush(gradient))
         painter.setPen(Qt.NoPen)
 
-        # Draw rounded rect with gradient
+        # Draw rounded rect with gradient:
         rect = QRect(0, 0, self.width(), self.height())
         painter.drawRoundedRect(rect, 10, 10)
 
