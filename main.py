@@ -1,20 +1,116 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog, QHBoxLayout, QSizePolicy, QSlider, QSpacerItem, QMessageBox, QShortcut
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog, QHBoxLayout, QSizePolicy, QSlider, QSpacerItem, QMessageBox, QShortcut, QLabel
 from PyQt5.QtMultimediaWidgets import QVideoWidget
-from PyQt5.QtCore import QTimer, Qt, QRect
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QColor, QLinearGradient, QBrush, QKeySequence
+from PyQt5.QtCore import QTimer, Qt, QRect, QPoint
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QColor, QLinearGradient, QBrush, QKeySequence, QMouseEvent
 from PyQt5.Qt import QStyle
 import sys
 import os
 import video_functions as vf
 
 
+class CustomTitleBar(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setAutoFillBackground(True)
+        self.setFixedHeight(30)
+
+        # Create layout and buttons in headers
+        self.layout = QHBoxLayout()
+        self.title = QLabel("Video Frame Breaker")
+        self.title.setStyleSheet("background-color: transparent; color: white; margin-left: 10px;")
+        self.layout.addWidget(self.title)
+
+        # Add strtch to push buttons to the right
+        self.layout.addStretch()
+
+        # Standard window buttons using QStyle
+        self.minimizeButton = QPushButton()
+        self.minimizeButton.setFixedSize(20, 20)
+        self.minimizeButton.setIcon(self.style().standardIcon(QStyle.SP_TitleBarMinButton))
+        self.minimizeButton.setStyleSheet(self.get_button_style("inactive"))
+        self.minimizeButton.clicked.connect(parent.showMinimized)
+
+        self.maximizeButton = QPushButton()
+        self.maximizeButton.setFixedSize(20, 20)
+        self.maximizeButton.setIcon(self.style().standardIcon(QStyle.SP_TitleBarMaxButton))
+        self.maximizeButton.setStyleSheet(self.get_button_style("inactive"))
+        self.maximizeButton.clicked.connect(parent.toggle_maximize)
+
+        self.closeButton = QPushButton()
+        self.closeButton.setFixedSize(20, 20)
+        self.closeButton.setIcon(self.style().standardIcon(QStyle.SP_TitleBarCloseButton))
+        self.closeButton.setStyleSheet(self.get_button_style("close"))
+        self.closeButton.clicked.connect(parent.close)
+
+        self.layout.addWidget(self.minimizeButton)
+        self.layout.addWidget(self.maximizeButton)
+        self.layout.addWidget(self.closeButton)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+
+        self.setLayout(self.layout)
+        self.start = QPoint(0, 0)
+        self.pressing = False
+
+
+    def get_button_style(self, button_type):
+        if button_type == "inactive":
+            return """
+                QPushButton {
+                    background-color: qlineargradient(
+                        spread:pad, x1:0, y1:0, x2:1, y2:1,
+                        stop:0 black, stop:0.7 gray);
+                    color: white;
+                    border: none;
+                }
+                QPushButton:hover {
+                    background-color: qlineargradient(
+                        spread:pad, x1:0, y1:0, x2:1, y2:1,
+                        stop:0 gray, stop:0.3 white);
+                }
+                """
+        elif button_type == "close":
+            return """
+                QPushButton {
+                    background-color: qlineargradient(
+                        spread:pad, x1:0, y1:0, x2:1, y2:1,
+                        stop:0 red, stop:0.7 darkred);
+                    color:white;
+                    border: none
+                }
+                QPushButton:hover {
+                    background-color: qlineargradient(
+                        spread:pad, x1:0, y1:0, x2:1, y2:1,
+                        stop:0 darkred, stop:0.3 red);
+                }
+            """
+
+
+    def mousePressEvent(self, event: QMouseEvent):
+        self.start = self.mapToGlobal(event.pos())
+        self.pressing = True
+    
+    def mouseMoveEvent(self, event: QMouseEvent):
+        if self.pressing:
+            self.parent().move(self.mapToGlobal(event.pos() - self.start + self.parent().pos()))
+    
+    def mouseReleaseEvent(self, event: QMouseEvent):
+        self.pressing = False
+
+
 class VideoPlayer(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        # Remove native title bar
+        self.setWindowFlags(Qt.FramelessWindowHint)
+
         # Title and layout
         self.setWindowTitle("Video Frame Breaker")
         self.setGeometry(100, 100, 800, 600)
+
+        # Custom title bar
+        self.titleBar = CustomTitleBar(self)
+        self.titleBar.setStyleSheet("background-color: black;")
 
         # Center background
         self.videoWidget = QVideoWidget()
@@ -106,6 +202,7 @@ class VideoPlayer(QMainWindow):
 
         # Main layout
         mainLayout = QVBoxLayout()
+        mainLayout.addWidget(self.titleBar)
         mainLayout.addWidget(self.videoWidget)
         mainLayout.addWidget(self.videoSlider)
         mainLayout.addWidget(self.controls)
@@ -141,6 +238,14 @@ class VideoPlayer(QMainWindow):
 
         # Set keyboard shortcuts
         self.set_shortcuts()
+
+
+    # Implement toggle_maximize
+    def toggle_maximize(self):
+        if self.isMaximized():
+            self.showNormal()
+        else:
+            self.showMaximized()
 
 
     # Set keyboard shortcuts
