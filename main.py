@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog, QHBoxLayout, QSizePolicy, QSlider, QSpacerItem, QMessageBox, QStyleOptionSlider
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog, QHBoxLayout, QSizePolicy, QSlider, QSpacerItem, QMessageBox, QShortcut
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtCore import QTimer, Qt, QRect
 from PyQt5.QtGui import QIcon, QPixmap, QPainter, QColor, QLinearGradient, QBrush, QKeySequence
@@ -140,29 +140,31 @@ class VideoPlayer(QMainWindow):
         self.video_path = ""
 
         # Set keyboard shortcuts
-        def set_shortcuts(self):
-            self.shortcut_close_fullscreen = QKeySequence(Qt.Key_Escape, self)
-            self.shortcut_close_fullscreen.activated.connect(self.exit_fullscreen)
+        self.set_shortcuts()
 
-            self.shortcut_toggle_fullscreen = QKeySequence(Qt.Key_F11, self)
-            self.shortcut_toggle_fullscreen.activated.connect(self.toggle_fullscreen)
 
-            self.shortcut_start_pause = QKeySequence(Qt.Key_Space, self)
-            self.shortcut_start_pause.activated.connect(self.start_pause_video)
-
-            self.shortcut_toggle_mute = QKeySequence(Qt.Key_M, self)
-            self.shortcut_toggle_mute.activated.connect(self.toggle_mute)
-
-            self.shortcut_skip_forward = QKeySequence(Qt.Key_Right, self)
-            self.shortcut_skip_forward.activated.connect(self.advance_video)
-
-            self.shortcut_backward = QKeySequence(Qt.Key_Left, self)
-            self.shortcut_backward.activated.connect(self.rewind_video)
+    # Set keyboard shortcuts
+    def set_shortcuts(self):
+        QShortcut(QKeySequence(Qt.Key_Escape), self, self.exit_fullscreen)
+        QShortcut(QKeySequence(Qt.Key_F11), self, self.toggle_fullscreen)
+        QShortcut(QKeySequence(Qt.Key_Space), self, self.start_pause_video)
+        QShortcut(QKeySequence(Qt.Key_M), self, self.toggle_mute)
+        QShortcut(QKeySequence(Qt.Key_Right), self, self.advance_video)
+        QShortcut(QKeySequence(Qt.Key_Left), self, self.rewind_video)
 
     
     def exit_fullscreen(self):
         if self.is_fullscreen:
             self.toggle_fullscreen()
+
+    
+    def toggle_mute(self):
+        current_volume = self.mediaPlayer.volume()
+        if current_volume > 0:
+            self.previous_volume = current_volume
+            self.mediaPlayer.setVolume(0)
+        else:
+            self.mediaPlayer.setVolume(self.previous_volume)
 
 
     def open_file(self):
