@@ -5,6 +5,7 @@ from PyQt5.QtGui import QIcon, QPixmap, QPainter, QColor, QLinearGradient, QBrus
 from PyQt5.Qt import QStyle
 import sys
 import os
+from ctypes import windll
 import video_functions as vf
 
 
@@ -13,6 +14,7 @@ class CustomTitleBar(QWidget):
         super().__init__(parent)
         self.setAutoFillBackground(True)
         self.setFixedHeight(30)
+        self.parent = parent  # Keep a reference to the parent
 
         # Create layout and buttons in headers
         self.layout = QHBoxLayout()
@@ -20,7 +22,7 @@ class CustomTitleBar(QWidget):
         self.title.setStyleSheet("background-color: transparent; color: white; margin-left: 10px;")
         self.layout.addWidget(self.title)
 
-        # Add strtch to push buttons to the right
+        # Add stretch to push buttons to the right
         self.layout.addStretch()
 
         # Standard window buttons using QStyle
@@ -48,9 +50,6 @@ class CustomTitleBar(QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
 
         self.setLayout(self.layout)
-        self.start = QPoint(0, 0)
-        self.pressing = False
-
 
     def get_button_style(self, button_type):
         if button_type == "inactive":
@@ -84,21 +83,17 @@ class CustomTitleBar(QWidget):
                 }
             """
 
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.parent.start_moving(event)
 
-def mousePressEvent(self, event: QMouseEvent):
-    if event.button() == Qt.LeftButton:
-        self.start = event.globalPos()
-        self.pressing = True
+    def mouseMoveEvent(self, event):
+        if event.buttons() == Qt.LeftButton:
+            self.parent.move_window(event)
 
-
-def mouseMoveEvent(self, event: QMouseEvent):
-    if self.pressing and self.parent() is not None:
-        self.parent().move(self.parent().pos() + event.globalPos() - self.start)
-        self.start = event.globalPos()
-
-
-def mouseReleaseEvent(self, event: QMouseEvent):
-    self.pressing = False
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.parent.stop_moving(event)
 
 
 class VideoPlayer(QMainWindow):
@@ -242,6 +237,24 @@ class VideoPlayer(QMainWindow):
 
         # Set keyboard shortcuts
         self.set_shortcuts()
+
+        # For dragging
+        self.moving = self
+        self.offset = QPoint()
+
+
+    def start_moving(self, event):
+        self.moving = True
+        self.offset = event.pos()
+    
+
+    def move_window(self, event):
+        if self.moving:
+            self.move(event.globalPos() - self.offset)
+
+
+    def stop_moving(self, event):
+        self.moving = False
 
 
     # Implement toggle_maximize
