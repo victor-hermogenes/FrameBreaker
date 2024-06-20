@@ -85,16 +85,20 @@ class CustomTitleBar(QWidget):
             """
 
 
-    def mousePressEvent(self, event: QMouseEvent):
-        self.start = self.mapToGlobal(event.pos())
+def mousePressEvent(self, event: QMouseEvent):
+    if event.button() == Qt.LeftButton:
+        self.start = event.globalPos()
         self.pressing = True
-    
-    def mouseMoveEvent(self, event: QMouseEvent):
-        if self.pressing:
-            self.parent().move(self.mapToGlobal(event.pos() - self.start + self.parent().pos()))
-    
-    def mouseReleaseEvent(self, event: QMouseEvent):
-        self.pressing = False
+
+
+def mouseMoveEvent(self, event: QMouseEvent):
+    if self.pressing and self.parent() is not None:
+        self.parent().move(self.parent().pos() + event.globalPos() - self.start)
+        self.start = event.globalPos()
+
+
+def mouseReleaseEvent(self, event: QMouseEvent):
+    self.pressing = False
 
 
 class VideoPlayer(QMainWindow):
@@ -315,12 +319,14 @@ class VideoPlayer(QMainWindow):
         if self.is_fullscreen:
             self.controls.hide()
             self.videoSlider.hide()
+            self.titleBar.hide()
 
 
     def mouseMoveEvent(self, event):
         if self.is_fullscreen:
             self.controls.show()
             self.videoSlider.show()
+            self.titleBar.show()
             self.mouse_timer.start()
         super().mouseMoveEvent(event)
 
