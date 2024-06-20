@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog, QHBoxLayout, QSizePolicy, QSlider, QSpacerItem, QMessageBox, QStyleOptionSlider
 from PyQt5.QtMultimediaWidgets import QVideoWidget
-from PyQt5.QtCore import QTimer, Qt
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QColor, QLinearGradient
+from PyQt5.QtCore import QTimer, Qt, QRect
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QColor, QLinearGradient, QBrush
 from PyQt5.Qt import QStyle
 import sys
 import os
