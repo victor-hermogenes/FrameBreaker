@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog, QHBoxLayout, QSizePolicy, QSlider, QSpacerItem, QMessageBox, QStyleOptionSlider
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtCore import QTimer, Qt, QRect
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QColor, QLinearGradient, QBrush
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QColor, QLinearGradient, QBrush, QKeySequence
 from PyQt5.Qt import QStyle
 import sys
 import os
@@ -45,12 +45,12 @@ class VideoPlayer(QMainWindow):
         """
 
         # Using ShinyButton instead of QPushButton
-        self.openButton = ShinyButton("Open Video File", self)
-        self.startPauseButton = ShinyButton("Play/Pause", self)
-        self.fullscreenButton = ShinyButton("Toggle Fullscreen", self)
-        self.advanceButton = ShinyButton("Skip Forward", self)
-        self.rewindButton = ShinyButton("Skip Backward", self)
-        self.extractFramesButton = ShinyButton("Extract Frames", self)
+        self.openButton = ShinyButton("", self)
+        self.startPauseButton = ShinyButton("", self)
+        self.fullscreenButton = ShinyButton("", self)
+        self.advanceButton = ShinyButton("", self)
+        self.rewindButton = ShinyButton("", self)
+        self.extractFramesButton = ShinyButton("", self)
 
         # Set icons for buttons
         self.openButton.setIcon(self.style().standardIcon(QStyle.SP_DirOpenIcon))
@@ -58,7 +58,7 @@ class VideoPlayer(QMainWindow):
         self.fullscreenButton.setIcon(self.style().standardIcon(QStyle.SP_TitleBarMaxButton))
         self.advanceButton.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipForward))
         self.rewindButton.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipBackward))
-        self.extractFramesButton.setIcon(self.style().standardIcon(QStyle.SP_DialogSaveButton))
+        self.extractFramesButton.setIcon(self.style().standardIcon(QStyle.SP_DriveCDIcon))
 
         # Connect buttons to thei respective slots
         self.openButton.clicked.connect(self.open_file)
@@ -111,7 +111,7 @@ class VideoPlayer(QMainWindow):
         mainLayout.addWidget(self.controls)
 
         # Central widget
-        centralWidget = QWidget(self)
+        centralWidget = GradientWidget(self)
         centralWidget.setLayout(mainLayout)
         self.setCentralWidget(centralWidget)
 
@@ -138,6 +138,31 @@ class VideoPlayer(QMainWindow):
         centralWidget.setMouseTracking(True)
 
         self.video_path = ""
+
+        # Set keyboard shortcuts
+        def set_shortcuts(self):
+            self.shortcut_close_fullscreen = QKeySequence(Qt.Key_Escape, self)
+            self.shortcut_close_fullscreen.activated.connect(self.exit_fullscreen)
+
+            self.shortcut_toggle_fullscreen = QKeySequence(Qt.Key_F11, self)
+            self.shortcut_toggle_fullscreen.activated.connect(self.toggle_fullscreen)
+
+            self.shortcut_start_pause = QKeySequence(Qt.Key_Space, self)
+            self.shortcut_start_pause.activated.connect(self.start_pause_video)
+
+            self.shortcut_toggle_mute = QKeySequence(Qt.Key_M, self)
+            self.shortcut_toggle_mute.activated.connect(self.toggle_mute)
+
+            self.shortcut_skip_forward = QKeySequence(Qt.Key_Right, self)
+            self.shortcut_skip_forward.activated.connect(self.advance_video)
+
+            self.shortcut_backward = QKeySequence(Qt.Key_Left, self)
+            self.shortcut_backward.activated.connect(self.rewind_video)
+
+    
+    def exit_fullscreen(self):
+        if self.is_fullscreen:
+            self.toggle_fullscreen()
 
 
     def open_file(self):
@@ -228,6 +253,20 @@ class VideoPlayer(QMainWindow):
             QMessageBox.information(self, "Extraction Complete", f"Extracted {frame_count} frames at {frame_rate} FPS to {output_folder}")
 
 
+class GradientWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setAutoFillBackground(True)
+
+    
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        gradient = QLinearGradient(0, 0, 0, self.height())
+        gradient.setColorAt(0, QColor(64, 64, 64))
+        gradient.setColorAt(1, QColor(0, 0, 0))
+        painter.fillRect(self.rect(), gradient)
+        super().paintEvent(event)
+
 class ClickableSlider(QSlider):
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -271,8 +310,24 @@ class ShinyButton(QPushButton):
         if not icon.isNull():
             icon_size = self.iconSize()
             pixmap = icon.pixmap(icon_size)
+
+            # Apply gradient black to the pixmap
+            gradient = QLinearGradient(0, 0, 0, pixmap.height())
+            gradient.setColorAt(0, QColor(0, 0, 0))
+            gradient.setColorAt(1, QColor(64, 64, 64))
+            brush = QBrush(gradient)
+
+            icon_pixmap = QPixmap(pixmap.size())
+            icon_pixmap.fill(Qt.transparent)
+            icon_painter = QPainter(icon_pixmap)
+            icon_painter.setCompositionMode(QPainter.CompositionMode_Source)
+            icon_painter.drawPixmap(0, 0, pixmap)
+            icon_painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
+            icon_painter.fillRect(icon_pixmap.rect(), brush)
+            icon_painter.end()
+
             icon_rect = QRect((self.width() - icon_size.width()) // 2, 10, icon_size.width(), icon_size.height())
-            painter.drawPixmap(icon_rect, pixmap)
+            painter.drawPixmap(icon_rect, icon_pixmap)
 
         painter.end()
 
