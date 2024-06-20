@@ -185,7 +185,6 @@ class VideoPlayer(QMainWindow):
         # Add a highlight for extra shininess
         highlight = QLinearGradient(0, 0, 24, 24)
         highlight.setColorAt(0, QColor(255, 255, 255, 100))
-        highlight.setColorAt(0.5, QColor(255, 255, 255, 50))
         highlight.setColorAt(1, QColor(255, 255, 255, 0))
         painter.setBrush(highlight)
         painter.setPen(Qt.NoPen)
