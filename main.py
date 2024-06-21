@@ -5,6 +5,7 @@ from PyQt5.QtGui import QIcon, QPixmap, QPainter, QColor, QLinearGradient, QBrus
 from PyQt5.Qt import QStyle
 import sys
 import os
+from ctypes import windll
 import video_functions as vf
 
 
@@ -13,6 +14,7 @@ class CustomTitleBar(QWidget):
         super().__init__(parent)
         self.setAutoFillBackground(True)
         self.setFixedHeight(30)
+        self.parent = parent  # Keep a reference to the parent
 
         # Create layout and buttons in headers
         self.layout = QHBoxLayout()
@@ -20,7 +22,7 @@ class CustomTitleBar(QWidget):
         self.title.setStyleSheet("background-color: transparent; color: white; margin-left: 10px;")
         self.layout.addWidget(self.title)
 
-        # Add strtch to push buttons to the right
+        # Add stretch to push buttons to the right
         self.layout.addStretch()
 
         # Standard window buttons using QStyle
@@ -48,9 +50,6 @@ class CustomTitleBar(QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
 
         self.setLayout(self.layout)
-        self.start = QPoint(0, 0)
-        self.pressing = False
-
 
     def get_button_style(self, button_type):
         if button_type == "inactive":
@@ -84,21 +83,17 @@ class CustomTitleBar(QWidget):
                 }
             """
 
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.parent.start_moving(event)
 
-def mousePressEvent(self, event: QMouseEvent):
-    if event.button() == Qt.LeftButton:
-        self.start = event.globalPos()
-        self.pressing = True
+    def mouseMoveEvent(self, event):
+        if event.buttons() == Qt.LeftButton:
+            self.parent.move_window(event)
 
-
-def mouseMoveEvent(self, event: QMouseEvent):
-    if self.pressing and self.parent() is not None:
-        self.parent().move(self.parent().pos() + event.globalPos() - self.start)
-        self.start = event.globalPos()
-
-
-def mouseReleaseEvent(self, event: QMouseEvent):
-    self.pressing = False
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.parent.stop_moving(event)
 
 
 class VideoPlayer(QMainWindow):
@@ -243,6 +238,24 @@ class VideoPlayer(QMainWindow):
         # Set keyboard shortcuts
         self.set_shortcuts()
 
+        # For dragging
+        self.moving = self
+        self.offset = QPoint()
+
+
+    def start_moving(self, event):
+        self.moving = True
+        self.offset = event.pos()
+    
+
+    def move_window(self, event):
+        if self.moving:
+            self.move(event.globalPos() - self.offset)
+
+
+    def stop_moving(self, event):
+        self.moving = False
+
 
     # Implement toggle_maximize
     def toggle_maximize(self):
@@ -296,19 +309,21 @@ class VideoPlayer(QMainWindow):
     def toggle_fullscreen(self):
         if self.is_fullscreen:
             self.showNormal()
-            self.setWindowFlags(self.windowFlags() & ~Qt.FramelessWindowHint)
+            self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
             self.setStyleSheet("")
             self.show()
             self.videoSlider.show()
             self.fullscreenButton.setIcon(self.style().standardIcon(QStyle.SP_TitleBarMaxButton))
             self.mouse_timer.stop()
             self.controls.show()
+            self.titleBar.show()
         else:
             self.showFullScreen()
             self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
             self.setStyleSheet("background-color: black;")
             self.show()
             self.videoSlider.hide()
+            self.titleBar.hide()
             self.fullscreenButton.setIcon(self.style().standardIcon(QStyle.SP_TitleBarNormalButton))
             self.mouse_timer.start()
 
@@ -394,22 +409,47 @@ class ShinyButton(QPushButton):
         super().__init__(text, parent)
         self.setMinimumHeight(40)
         self.setMinimumWidth(100)
+        self.setStyleSheet(self.get_button_style())
 
     
+    def get_button_style(self):
+        return """
+        QPushButton {
+            background-color: qlineargradient(
+                spread:pad, x1:0, y1:0, x2:1, y2:1,
+                stop:0 rgba(0, 209, 209, 255), stop:1 rgba(0, 150, 150, 255));
+            color: white;
+            border: none;
+            border-radius: 10px;
+        }
+        QPushButton:hover {
+            background-color: qlineargradient(
+                spread:pad, x1:0, y1:0, x2:1, y2:1,
+                stop:0 rgba(0, 255, 255, 255), stop:1 rgba(0, 180, 180, 255));
+        }
+        """
+
+
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
-        # create gradient
-        gradient = QLinearGradient(0, 0, 0, self.height())
-        gradient.setColorAt(0, QColor(0, 209, 209))
-        gradient.setColorAt(0.5, QColor(0, 180, 180))
-        gradient.setColorAt(1, QColor(0, 150, 150))
+        # Determine the gradient based on hover state
+        if self.underMouse():
+            gradient = QLinearGradient(0, 0, 0, self.height())
+            gradient.setColorAt(0, QColor(0, 255, 255))
+            gradient.setColorAt(0.5, QColor(0, 200, 200))
+            gradient.setColorAt(1, QColor(0, 180, 180))
+        else:
+            gradient = QLinearGradient(0, 0, 0, self.height())
+            gradient.setColorAt(0, QColor(0, 209, 209))
+            gradient.setColorAt(0.5, QColor(0, 180, 180))
+            gradient.setColorAt(1, QColor(0, 150, 150))
 
         painter.setBrush(QBrush(gradient))
         painter.setPen(Qt.NoPen)
 
-        # Draw rounded rect with gradient
+        # Draw rounded rect with gradient:
         rect = QRect(0, 0, self.width(), self.height())
         painter.drawRoundedRect(rect, 10, 10)
 
