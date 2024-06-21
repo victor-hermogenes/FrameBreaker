@@ -316,12 +316,14 @@ class VideoPlayer(QMainWindow):
             self.fullscreenButton.setIcon(self.style().standardIcon(QStyle.SP_TitleBarMaxButton))
             self.mouse_timer.stop()
             self.controls.show()
+            self.titleBar.show()
         else:
             self.showFullScreen()
             self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
             self.setStyleSheet("background-color: black;")
             self.show()
             self.videoSlider.hide()
+            self.titleBar.hide()
             self.fullscreenButton.setIcon(self.style().standardIcon(QStyle.SP_TitleBarNormalButton))
             self.mouse_timer.start()
 
